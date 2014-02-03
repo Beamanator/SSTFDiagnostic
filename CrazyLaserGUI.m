@@ -60,7 +60,8 @@ function[] = CrazyLaserGUI
     % Create all GUI components and initialize handles structure to pass to
     % all other functions in FrogScanGUI
     function OpeningFn
-        
+        % Clears console:
+        clc;
 
         % Background color for GUI [red% green% blue%]:
         bkc = [0.9255 0.9137 0.8471]; 
@@ -159,6 +160,24 @@ function[] = CrazyLaserGUI
                 'separator','off',...
                 'callback',@MenuCallback...
             );
+            StartInductionSensor = uimenu(...
+                'parent', Run_menu,...
+                'label','Induction Sensor',...
+                'separator','on',...
+                'callback',@MenuCallback...
+            );
+        
+        Test_menu = uimenu(...
+            'parent',Main_Figure,...
+            'label','Test',...
+            'callback',@MenuCallback...
+        );
+            Test2_menu = uimenu(...
+                'parent',Test_menu,...
+                'label','Test2',...
+                'Checked','off',...
+                'callback',@MenuCallback...
+            );
 
         %-----------------------------------------------------------------%
         %%%                       Data Array       (Main_Figure)        %%%
@@ -178,6 +197,10 @@ function[] = CrazyLaserGUI
         %--- menu handles
         data.handles.ExitProgram = ExitProgram;
         data.handles.StartArduino = StartArduino;
+        data.handles.StartInductionSensor = StartInductionSensor;
+        
+        data.handles.Test_menu = Test_menu;
+        data.handles.Test2_menu = Test2_menu;
     end
 
     %-----------------------------------------------------------------%
@@ -200,6 +223,28 @@ function[] = CrazyLaserGUI
             case handles.StartArduino
                 StartArduino();
                 set(handles.TestMove_button, 'Enable', 'on');
+                set(data.handles.StartArduino, 'Checked', 'on');
+            case handles.StartInductionSensor
+                % Must click 'Change Folder' on Loadup for this to work.
+                addpath([pwd '\Matlab']);
+                %instrfind;
+                data.Hardware.Inductor = LDC1000_script();
+            case handles.Test_menu
+                disp('Test function.');
+                %bob = data.Hardware.Inductor;
+                %if exist('bob', 'var')
+                %    disp('available');
+                %else
+                %    disp('nope');
+                %end
+            case handles.Test2_menu
+                box = data.handles.Test2_menu;
+                checked = get(box, 'Checked');
+                if strcmp(checked,'off');
+                    set(box, 'Checked', 'on');
+                else
+                    set(box, 'Checked', 'off');
+                end
                 
         end
         % Maybe call UpdateDisplay if we want?
@@ -228,11 +273,18 @@ function[] = CrazyLaserGUI
     %- evnt seems to be an empty variable.
     %--- in any case, src and evnt need to be accepted, no need to use 'em.
     function MF_DeleteFn(src,evnt)
-        if strcmp(get(data.handles.TestMove_button, 'Enable'),'on')
+        %- This works, but we'll try the other way.
+        %if strcmp(get(data.handles.TestMove_button, 'Enable'),'on')
+        %    delete(data.Hardware.Arduino);
+        %    disp('Arduino disconnected');
+        %elseif strcmp(get(data.handles.TestMove_button, 'Enable'),'off')
+        %    disp('arduino already off');
+        %end
+        %- New way:
+        if exist('data.Hardware.Arduino', 'var')
             delete(data.Hardware.Arduino);
-            disp('Arduino disconnected');
-        elseif strcmp(get(data.handles.TestMove_button, 'Enable'),'off')
-            disp('arduino already off');
+        else
+            disp('Arduino already off');
         end
         disp('Here we will kill all other events - spectrometer, etc.!');
     end
