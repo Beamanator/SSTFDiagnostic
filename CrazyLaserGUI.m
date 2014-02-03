@@ -72,7 +72,7 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         
-        StartArduino();
+        %StartArduino();
 
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
