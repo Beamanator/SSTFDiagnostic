@@ -60,6 +60,7 @@ function[] = CrazyLaserGUI
     % Create all GUI components and initialize handles structure to pass to
     % all other functions in FrogScanGUI
     function OpeningFn
+        
 
         % Background color for GUI [red% green% blue%]:
         bkc = [0.9255 0.9137 0.8471]; 
@@ -72,8 +73,6 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         
-        %StartArduino();
-
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
         %-----------------------------------------------------------------%
@@ -139,13 +138,25 @@ function[] = CrazyLaserGUI
         %- Main_Figure = which uipanel to put it on.
         %- label: File = text to appear on menu to click on.
         File_menu = uimenu(...
-            Main_Figure,...
+            'parent', Main_Figure,...
             'label','File'...
         );
             ExitProgram = uimenu(...
-                File_menu,...
+                'parent',File_menu,...
                 'label','Exit',...
                 'separator','on',...
+                'callback',@MenuCallback...
+            );
+        
+        Run_menu = uimenu(...
+            'parent', Main_Figure,...
+            'label','Run'...
+        );
+    
+            StartArduino = uimenu(...
+                'parent', Run_menu,...
+                'label','Arduino',...
+                'separator','off',...
                 'callback',@MenuCallback...
             );
 
@@ -166,6 +177,7 @@ function[] = CrazyLaserGUI
         
         %--- menu handles
         data.handles.ExitProgram = ExitProgram;
+        data.handles.StartArduino = StartArduino;
     end
 
     %-----------------------------------------------------------------%
@@ -185,6 +197,8 @@ function[] = CrazyLaserGUI
             case handles.ExitProgram
                 %MF_DeleteFn; %this line may be unnecessary.
                 delete(Main_Figure);
+            case handles.StartArduino
+                StartArduino();
                 
         end
         % Maybe call UpdateDisplay if we want?
