@@ -1,13 +1,16 @@
-Project name: Scanning spectral diagnostics for spatio-temporal focused ultrashort laser pulses
+CrazyLaserGUI
+==================
+Project title:
+Scanning spectral diagnostics for spatio-temporal focused ultrashort laser pulses
+
 ==================
 Collaborators:
-Alex Beaman
-Sam Cooper
-Dr. Charles Durfee
-Michael Greco
+Alex Beaman,
+Sam Cooper,
+Dr. Charles Durfee,
+Michael Greco,
 Amanda Meier
-==================
-  CrazyLaserGUI
+
 ==================
 MATLAB GUI for Senior Design Project @ CSM
 
