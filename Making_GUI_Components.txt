@@ -1,0 +1,16 @@
+Making Components in our GUI:
+
+1) What type of component are you making?
+- Panel (uipanel)
+- Button (uicontrol)
+- Static text (uicontrol)
+- Editable text (uicontrol)
+- File menu (uimenu)
+
+2) Create component with all required data - use examples in GUI. (make sure to create componenent in the correct section!!! Sections are separated by 3 commented-out lines!!! - Most are already defined)
+
+3) Add component to data.handles object. [even if it isn't technically necessary]
+
+4) Create callback - add case to desired callback function (MenuCallback, ButtonCallback, etc.)
+
+5) Test your component many times to make sure it's working properly :D
