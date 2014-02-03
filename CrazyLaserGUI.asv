@@ -73,8 +73,6 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         
-        %StartArduino();
-
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
         %-----------------------------------------------------------------%
@@ -127,6 +125,7 @@ function[] = CrazyLaserGUI
             'parent',Main_Figure,...
             'units','normalized',...
             'style','pushbutton',...
+            'Enable','off',...
             'string','Move Motor!',...
             'position',[0.85 0.2 0.1 0.3],...
             'callback',@ButtonCallback...
@@ -150,14 +149,16 @@ function[] = CrazyLaserGUI
                 'callback',@MenuCallback...
             );
         
-        St_menu = uimenu(...
+        Run_menu = uimenu(...
             'parent', Main_Figure,...
             'label','Run'...
         );
-    
             StartArduino = uimenu(...
                 'parent', Run_menu,...
-                'label','Arduino'
+                'label','Arduino',...
+                'separator','off',...
+                'callback',@MenuCallback...
+            );
 
         %-----------------------------------------------------------------%
         %%%                       Data Array       (Main_Figure)        %%%
@@ -176,6 +177,7 @@ function[] = CrazyLaserGUI
         
         %--- menu handles
         data.handles.ExitProgram = ExitProgram;
+        data.handles.StartArduino = StartArduino;
     end
 
     %-----------------------------------------------------------------%
@@ -195,6 +197,9 @@ function[] = CrazyLaserGUI
             case handles.ExitProgram
                 %MF_DeleteFn; %this line may be unnecessary.
                 delete(Main_Figure);
+            case handles.StartArduino
+                StartArduino();
+                set(handles.TestMove_button, 'Enable', 'on');
                 
         end
         % Maybe call UpdateDisplay if we want?
@@ -223,8 +228,11 @@ function[] = CrazyLaserGUI
     %- evnt seems to be an empty variable.
     %--- in any case, src and evnt need to be accepted, no need to use 'em.
     function MF_DeleteFn(src,evnt)
-        delete(data.Hardware.Arduino);
-        disp('Arduino disconnected');
+        if strcmp(get(handles.TestMove_button, 'Enable'),'on')
+            delete(data.Hardware.Arduino);
+        elseif strcmp(get(handles.TestMove_button, 'Enable'),'off')
+            disp('arduino already off');
+        end
         disp('Here we will kill all other events - spectrometer, etc.!');
     end
 
