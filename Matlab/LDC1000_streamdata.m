@@ -52,7 +52,7 @@ if(N<2048)
     N=2048;
 end
 
-N=512*ceil(N/512)
+N=512*ceil(N/512);
 
 Rp_buf=zeros(N,1);
 Tp_buf=zeros(N,1);
