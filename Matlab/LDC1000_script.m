@@ -43,13 +43,14 @@
 %
 %   R_0_1
 %   Copyright Texas Instruments(R)
+function [ ret ] = LDC1000_script
 
 %% Reg Defaults - may not be same for all EVMs
 regaddr=[0 1 2 3 4 5 6 7 8 9 10 11 20 21 22 23 24 25];  % Reg addresses
 regdat=[1 17 59 148 23 2 80 20 192 18 2 1 0 0 0 0 0 0]; % Reg contents
 
 %% Open serial port
-sport=LDC1000_open('COM34',5); % Modify serial port as needed
+sport=LDC1000_open('COM3',5); % Modify serial port as needed
 V=LDC1000_version(sport); % read version info
 fset=LDC1000_setsamplerate(sport,10000); % set sample rate to 10000 Hz
 
@@ -73,8 +74,9 @@ w1=LDC1000_writereg(sport, 11, 1);
 [Rp, Tp]=LDC1000_streamdata(sport, 0, 2^18, 2^13); % get single shot data of 2^18 samples
 
 %% Get data (continous) - press any key when plot window is highlighted to stop acquisition
-[Rp, Tp]=LDC1000_streamdata(sport, 1, 2^18, 2^13); % get data - last 2^18 samples are returned
+%[Rp, Tp]=LDC1000_streamdata(sport, 1, 2^18, 2^13); % get data - last 2^18 samples are returned
 
 %% Close serial port
 ret=LDC1000_close(sport);
 
+end
