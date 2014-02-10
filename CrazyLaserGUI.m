@@ -106,6 +106,7 @@ function[] = CrazyLaserGUI
             'units','normalized',...
             'style','text',...
             'string','0.0',...
+            'value',0,...
             'fontsize',14,...
             'fontweight','bold',...
             'HorizontalAlignment','left',...
@@ -223,11 +224,11 @@ function[] = CrazyLaserGUI
             case handles.StartArduino
                 StartArduino();
                 set(handles.TestMove_button, 'Enable', 'on');
-                set(data.handles.StartArduino, 'Checked', 'on');
+                set(handles.StartArduino, 'Checked', 'on');
+                set(handles.StartArduino, 'Enable', 'off');
             case handles.StartInductionSensor
                 % Must click 'Change Folder' on Loadup for this to work.
                 addpath([pwd '\Matlab']);
-                %instrfind;
                 data.Hardware.Inductor = LDC1000_script();
             case handles.Test_menu
                 disp('Test function.');
@@ -238,7 +239,7 @@ function[] = CrazyLaserGUI
                 %    disp('nope');
                 %end
             case handles.Test2_menu
-                box = data.handles.Test2_menu;
+                box = handles.Test2_menu;
                 checked = get(box, 'Checked');
                 if strcmp(checked,'off');
                     set(box, 'Checked', 'on');
