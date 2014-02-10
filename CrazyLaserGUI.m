@@ -73,6 +73,7 @@ function[] = CrazyLaserGUI
         %data.Parameters = load('frogscan.mat'); % - how FrogScan starts
         %Parameters
         data.Parameters.ExampleValue = 0.0;
+        data.Parameters.stepValue = 0.0;
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
@@ -132,6 +133,23 @@ function[] = CrazyLaserGUI
             'position',[0.85 0.2 0.1 0.3],...
             'callback',@ButtonCallback...
         );
+        Test_etext = uicontrol(...
+            'parent',Example_panel,...
+            'units','normalized',...
+            'style','edit',...
+            'backgroundcolor','w',...
+            'position',[0.05 0.85 0.2 0.1],...
+            'callback',@ButtonCallback...
+        );
+        Test_step = uicontrol(...
+            'parent',Example_panel,...
+            'units','normalized',...
+            'style','pushbutton',...
+            'Enable','off',...
+            'string','TestMove',...
+            'position',[0.05 0.7 0.2 0.1],...
+            'callback',@ButtonCallback...
+        );
 
         %-----------------------------------------------------------------%
         %%%                         Menu Bar       (Main_Figure)        %%%
@@ -169,7 +187,7 @@ function[] = CrazyLaserGUI
             );
         
         Test_menu = uimenu(...
-            'parent',Main_Figure,...
+            'parent', Main_Figure,...
             'label','Test',...
             'callback',@MenuCallback...
         );
@@ -179,7 +197,7 @@ function[] = CrazyLaserGUI
                 'Checked','off',...
                 'callback',@MenuCallback...
             );
-
+        
         %-----------------------------------------------------------------%
         %%%                       Data Array       (Main_Figure)        %%%
         %-----------------------------------------------------------------%
@@ -191,9 +209,13 @@ function[] = CrazyLaserGUI
         %--- static text
         data.handles.Example_stext = Example_stext;
         
+        %--- edit text
+        data.handles.Test_etext = Test_etext;
+        
         %--- button handles
         data.handles.Example_button = Example_button;
         data.handles.TestMove_button = TestMove_button;
+        data.handles.Test_step = Test_step;
         
         %--- menu handles
         data.handles.ExitProgram = ExitProgram;
@@ -202,6 +224,7 @@ function[] = CrazyLaserGUI
         
         data.handles.Test_menu = Test_menu;
         data.handles.Test2_menu = Test2_menu;
+        
     end
 
     %-----------------------------------------------------------------%
@@ -223,23 +246,26 @@ function[] = CrazyLaserGUI
                 delete(Main_Figure);
             case handles.StartArduino
                 StartArduino();
-                set(handles.TestMove_button, 'Enable', 'on');
-                set(handles.StartArduino, 'Checked', 'on');
-                set(handles.StartArduino, 'Enable', 'off');
+                if isfield(data.Hardware, 'Arduino')
+                    set(handles.TestMove_button, 'Enable', 'on');
+                    set(handles.StartArduino, 'Checked', 'on');
+                    set(handles.StartArduino, 'Enable', 'off');
+                end
             case handles.StartInductionSensor
                 % Must click 'Change Folder' on Loadup for this to work.
                 addpath([pwd '\Matlab']);
                 data.Hardware.Inductor = LDC1000_script();
             case handles.Test_menu
-                disp('Test function.');
+                disp('Test function.');               
                 %bob = data.Hardware.Inductor;
                 %if exist('bob', 'var')
                 %    disp('available');
                 %else
                 %    disp('nope');
                 %end
-            case handles.Test2_menu
+            case handles.Test2_menu                
                 box = handles.Test2_menu;
+
                 checked = get(box, 'Checked');
                 if strcmp(checked,'off');
                     set(box, 'Checked', 'on');
@@ -254,6 +280,7 @@ function[] = CrazyLaserGUI
     %--- ButtonCallback is the same as menuCallback, but with buttons!
     function ButtonCallback(srv,evnt)
         handles = data.handles;
+        stepValue = data.Parameters.stepValue;
         
         switch gcbo
             case handles.Example_button
@@ -261,9 +288,26 @@ function[] = CrazyLaserGUI
                 set(handles.Example_stext,'string',num2str(data.Parameters.ExampleValue));
                 
             case handles.TestMove_button
-                Move('F',400);
+               % Move('F',400);
+               % pause(5);
+               % Move('B',400);
+                Move('F',stepValue);
                 pause(5);
-                Move('B',400);
+                Move('B',stepValue);
+                
+            case handles.Test_etext
+                stepValue = get(handles.Test_etext,'string');
+                if isempty(stepValue) %is something
+                    set(handles.Test_step, 'Enable', 'off');
+                    data.Parameters.stepValue = 0.0;
+                elseif not(isnan(str2double(stepValue)))
+                    set(handles.Test_step, 'Enable', 'on');
+                    data.Parameters.stepValue = str2double(stepValue);
+                elseif isnan(str2double(stepValue))
+                    disp(stepValue);
+                end
+                
+                disp(data.Parameters.stepValue);
         end
         % Maybe call UpdateDisplay if we want?
     end
@@ -281,7 +325,8 @@ function[] = CrazyLaserGUI
         %elseif strcmp(get(data.handles.TestMove_button, 'Enable'),'off')
         %    disp('arduino already off');
         %end
-        %- New way:
+        %- New way:     
+        
         if exist('data.Hardware.Arduino', 'var')
             delete(data.Hardware.Arduino);
         else
@@ -295,6 +340,7 @@ function[] = CrazyLaserGUI
     %- create Arduino variable, set correct pins to correct values.
     %- [Only called ONCE - when starting CrazyLaserGUI]
     function StartArduino()
+        data.Hardware.Arduino2 = 3;
         data.Hardware.Arduino = arduino('COM4');
         a = data.Hardware.Arduino;
         
