@@ -340,8 +340,13 @@ function[] = CrazyLaserGUI
     %- create Arduino variable, set correct pins to correct values.
     %- [Only called ONCE - when starting CrazyLaserGUI]
     function StartArduino()
-        data.Hardware.Arduino2 = 3;
-        data.Hardware.Arduino = arduino('COM4');
+        if exist('data.Hardware.Arduino','var') && isa(data.Hardware.Arduino,'arduino') && isvalid(data.Hardware.Arduino),
+            % already connected, so nothing to do here.
+        else
+            % Arduino is not connected yet, so set up connection.
+            data.Hardware.Arduino = arduino('COM4');
+        end
+
         a = data.Hardware.Arduino;
         
         a.pinMode(2, 'OUTPUT');
