@@ -74,6 +74,7 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         data.Parameters.stepValue = 0.0;
+        data.Parameters.stepSize = 'EighthStep';
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
@@ -128,7 +129,7 @@ function[] = CrazyLaserGUI
             'parent',Main_Figure,...
             'units','normalized',...
             'style','pushbutton',...
-            'Enable','off',...
+            'Enable','on',...
             'string','Move Motor!',...
             'position',[0.85 0.2 0.1 0.3],...
             'callback',@ButtonCallback...
@@ -137,6 +138,7 @@ function[] = CrazyLaserGUI
             'parent',Example_panel,...
             'units','normalized',...
             'style','edit',...
+            'string','0.0',...
             'backgroundcolor','w',...
             'position',[0.05 0.85 0.2 0.1],...
             'callback',@ButtonCallback...
@@ -186,6 +188,37 @@ function[] = CrazyLaserGUI
                 'callback',@MenuCallback...
             );
         
+            %removed 'Enable','off',...
+        StepSize_menu = uimenu(...
+            'parent', Main_Figure,...
+            'label','Step Size'...
+        );
+            FullStep = uimenu(...
+                'parent', StepSize_menu,...
+                'label','Full (1)',...
+                'separator','off',...
+                'callback',@MenuCallback...
+            );
+            HalfStep = uimenu(...
+                'parent', StepSize_menu,...
+                'label','Half (1/2)',...
+                'separator','off',...
+                'callback',@MenuCallback...
+            );
+            QuarterStep = uimenu(...
+                'parent', StepSize_menu,...
+                'label','Quarter (1/4)',...
+                'separator','off',...
+                'callback',@MenuCallback...
+            );
+            EighthStep = uimenu(...
+                'parent', StepSize_menu,...
+                'label','Eighth (1/8)',...
+                'separator','off',...
+                'Checked','on',...
+                'callback',@MenuCallback...
+            );
+        
         Test_menu = uimenu(...
             'parent', Main_Figure,...
             'label','Test',...
@@ -221,6 +254,12 @@ function[] = CrazyLaserGUI
         data.handles.ExitProgram = ExitProgram;
         data.handles.StartArduino = StartArduino;
         data.handles.StartInductionSensor = StartInductionSensor;
+        
+        data.handles.StepSize_menu = StepSize_menu;
+        data.handles.FullStep = FullStep;
+        data.handles.HalfStep = HalfStep;
+        data.handles.QuarterStep = QuarterStep;
+        data.handles.EighthStep = EighthStep;
         
         data.handles.Test_menu = Test_menu;
         data.handles.Test2_menu = Test2_menu;
@@ -272,9 +311,41 @@ function[] = CrazyLaserGUI
                 else
                     set(box, 'Checked', 'off');
                 end
-                
+            % These can be simplified - not calling unCheckStep 4 times!
+            case handles.FullStep
+                unCheckStep();
+                set(handles.FullStep, 'Checked','on');
+            case handles.HalfStep
+                unCheckStep();
+                set(handles.HalfStep, 'Checked','on');
+            case handles.QuarterStep
+                unCheckStep();
+                set(handles.QuarterStep, 'Checked','on');
+            case handles.EighthStep
+                unCheckStep();
+                set(handles.EighthStep, 'Checked','on');
         end
         % Maybe call UpdateDisplay if we want?
+    end
+
+    % un-checks the step menu thang that is alerady checked.
+    function unCheckStep()
+        handles = data.handles;
+        
+        Full = get(handles.FullStep, 'Checked');
+        Half = get(handles.HalfStep, 'Checked');
+        Quarter = get(handles.QuarterStep, 'Checked');
+        Eighth = get(handles.EighthStep, 'Checked');
+        
+        if (strcmp(Full, 'on'))
+            set(handles.FullStep, 'Checked', 'off');
+        elseif (strcmp(Half, 'on'))
+            set(handles.HalfStep, 'Checked', 'off');
+        elseif (strcmp(Quarter, 'on'))
+            set(handles.QuarterStep, 'Checked', 'off');
+        elseif (strcmp(Eighth, 'on'))
+            set(handles.EighthStep, 'Checked', 'off');
+        end
     end
 
     %--- ButtonCallback is the same as menuCallback, but with buttons!
@@ -349,10 +420,26 @@ function[] = CrazyLaserGUI
 
         a = data.Hardware.Arduino;
         
-        a.pinMode(2, 'OUTPUT');
-        a.pinMode(3, 'OUTPUT');
-        a.digitalWrite(2, 1); % 1 = digital high (5V)
-        a.digitalWrite(3, 0); % 0 = digital low  (0V)
+        a.pinMode(2, 'OUTPUT'); % direction pin
+        a.pinMode(3, 'OUTPUT'); % step pin
+        a.pinMode(4, 'OUTPUT'); % MS1
+        a.pinMode(5, 'OUTPUT'); % MS2
+        
+        % digitalWrite(a, b): a = pin #, b = high (1) or low (0)
+        a.digitalWrite(2, 1); % 1 = Forward ( AWAY from motor )
+        a.digitalWrite(3, 0);
+        
+        % Microstepping Table:
+        %   MS1 (4)      MS2 (5)     resolution
+        %    0            0          full step
+        %    1            0          1/2  step
+        %    0            1          1/4  step
+        %    1            1          1/8  step
+        a.digitalWrite(4, 1);
+        a.digitalWrite(5, 1);
+        
+        % Enable stepping menu:
+        set(data.handles.StepSize_menu, 'Enable', 'on');
     end
 
     %--- Moves Arduino a given direction and # of steps.
