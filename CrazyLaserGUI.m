@@ -74,7 +74,7 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         data.Parameters.stepValue = 0.0;
-        data.Parameters.stepSize = 'EighthStep';
+        data.Parameters.StepSize = 'EighthStep';
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
@@ -313,39 +313,19 @@ function[] = CrazyLaserGUI
                 end
             % These can be simplified - not calling unCheckStep 4 times!
             case handles.FullStep
-                unCheckStep();
+                setStepSize('1');
                 set(handles.FullStep, 'Checked','on');
             case handles.HalfStep
-                unCheckStep();
+                setStepSize('1/2');
                 set(handles.HalfStep, 'Checked','on');
             case handles.QuarterStep
-                unCheckStep();
+                setStepSize('1/4');
                 set(handles.QuarterStep, 'Checked','on');
             case handles.EighthStep
-                unCheckStep();
+                SetStepSize('1/8');
                 set(handles.EighthStep, 'Checked','on');
         end
         % Maybe call UpdateDisplay if we want?
-    end
-
-    % un-checks the step menu thang that is alerady checked.
-    function unCheckStep()
-        handles = data.handles;
-        
-        Full = get(handles.FullStep, 'Checked');
-        Half = get(handles.HalfStep, 'Checked');
-        Quarter = get(handles.QuarterStep, 'Checked');
-        Eighth = get(handles.EighthStep, 'Checked');
-        
-        if (strcmp(Full, 'on'))
-            set(handles.FullStep, 'Checked', 'off');
-        elseif (strcmp(Half, 'on'))
-            set(handles.HalfStep, 'Checked', 'off');
-        elseif (strcmp(Quarter, 'on'))
-            set(handles.QuarterStep, 'Checked', 'off');
-        elseif (strcmp(Eighth, 'on'))
-            set(handles.EighthStep, 'Checked', 'off');
-        end
     end
 
     %--- ButtonCallback is the same as menuCallback, but with buttons!
@@ -429,23 +409,53 @@ function[] = CrazyLaserGUI
         a.digitalWrite(2, 1); % 1 = Forward ( AWAY from motor )
         a.digitalWrite(3, 0);
         
-        % Microstepping Table:
-        %   MS1 (4)      MS2 (5)     resolution
-        %    0            0          full step
-        %    1            0          1/2  step
-        %    0            1          1/4  step
-        %    1            1          1/8  step
-        a.digitalWrite(4, 1);
-        a.digitalWrite(5, 1);
+        SetStepSize('1/8');
         
         % Enable stepping menu:
         set(data.handles.StepSize_menu, 'Enable', 'on');
     end
 
+    %--- Sets step size for stepper motor according to this table:
+    % Microstepping Table:
+        %   MS1 (4)      MS2 (5)     resolution
+        %    0            0          full step
+        %    1            0          1/2  step
+        %    0            1          1/4  step
+        %    1            1          1/8  step
+    function SetStepSize(stepsize)
+        MS1_pin = 4; MS1_V = 0;
+        MS2_pin = 5; MS2_V = 0;
+        
+        if exist('data.Hardware.Arduino','var') && isa(data.Hardware.Arduino,'arduino') && isvalid(data.Hardware.Arduino),
+            a = data.Hardware.Arduino;
+            data.Parameters.StepSize = stepsize;
+            
+            unCheckStep();
+            
+            if (strcmp(stepsize, '1'))
+                % Already on this state
+            elseif (strcmp(stepsize, '1/2'))
+                MS1_V = 1;
+                MS2_V = 0;
+            elseif (strcmp(stepsize, '1/4'))
+                MS1_V = 0;
+                MS2_V = 1;
+            elseif (strcmp(stepsize, '1/8'))
+                MS1_V = 1;
+                MS2_V = 1;
+            end
+            
+            a.digitalWrite(MS1_pin, MS1_V);
+            a.digitalWrite(MS2_pin, MS2_V);
+        else
+            % Arduino is not connected yet.
+            disp('Must connect Arduino before setting its step size!');
+        end
+    end
+
     %--- Moves Arduino a given direction and # of steps.
     %- if dir is 'F', will move stage AWAY from motor [forward]
     %- if dir is 'B', will move stage TOWARDS motor [backward]
-    %- 
     function Move(dir, steps)
         a = data.Hardware.Arduino;
         switch dir
@@ -459,9 +469,31 @@ function[] = CrazyLaserGUI
         disp(steps);
         for m = 1:steps
             a.digitalWrite(3, 1);
-            pause(0.001); % - should be ~ 1 millisecond pause
+            pause(0.001); % - should be ~ 1 millisecond pause but ISN'T
             a.digitalWrite(3, 0);
             pause(0.001);
+        end
+    end
+
+    %--- un-checks the step menu item that is alerady checked.
+    %- Should be deleted if we change this to be inside the main GUI
+    %section
+    function unCheckStep()
+        handles = data.handles;
+        
+        Full = get(handles.FullStep, 'Checked');
+        Half = get(handles.HalfStep, 'Checked');
+        Quarter = get(handles.QuarterStep, 'Checked');
+        Eighth = get(handles.EighthStep, 'Checked');
+        
+        if (strcmp(Full, 'on'))
+            set(handles.FullStep, 'Checked', 'off');
+        elseif (strcmp(Half, 'on'))
+            set(handles.HalfStep, 'Checked', 'off');
+        elseif (strcmp(Quarter, 'on'))
+            set(handles.QuarterStep, 'Checked', 'off');
+        elseif (strcmp(Eighth, 'on'))
+            set(handles.EighthStep, 'Checked', 'off');
         end
     end
 
