@@ -74,7 +74,7 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         data.Parameters.stepValue = 0.0;
-        data.Parameters.StepSize = 'EighthStep';
+        data.Parameters.StepSize = '1/8';
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
