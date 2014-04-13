@@ -43,7 +43,7 @@
 %
 %   R_0_1
 %   Copyright Texas Instruments(R)
-function [ ret ] = LDC1000_script
+function [ Rp, Tp] = LDC1000_script
 
 %% Reg Defaults - may not be same for all EVMs
 regaddr=[0 1 2 3 4 5 6 7 8 9 10 11 20 21 22 23 24 25];  % Reg addresses
@@ -71,7 +71,8 @@ end
 w1=LDC1000_writereg(sport, 11, 1);
 
 %% Get data (single shot)
-[Rp, Tp]=LDC1000_streamdata(sport, 0, 2^18, 2^13); % get single shot data of 2^18 samples
+%[Rp, Tp, fig]=LDC1000_streamdata(sport, 0, 2^18, 2^13); % get single shot data of 2^18 samples
+[Rp, Tp]=LDC1000_streamdata(sport, 0, 2^10, 2^9);
 
 %% Get data (continous) - press any key when plot window is highlighted to stop acquisition
 %[Rp, Tp]=LDC1000_streamdata(sport, 1, 2^18, 2^13); % get data - last 2^18 samples are returned
