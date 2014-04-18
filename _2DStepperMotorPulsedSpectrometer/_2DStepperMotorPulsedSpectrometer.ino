@@ -48,7 +48,7 @@ int xDirectPin = 7;   // pin # for x direction.
 int zDirectPin = 9;   // pin # for z direction.
 int xMotor = 6;  // pin # for x-axis motor.
 int zMotor = 8;  // pin # for z-axis motor.
-int xSteps = 100;  // # Steps to move in x-axis.
+int xSteps = 0;  // # Steps to move in x-axis.
 int zSteps = 0;  // # Steps to move in z-axis.
 // 0 = 0th interrupt, but on pin 2.
 // 1 = 1st interrupt, but on pin 3. [didn't work until using correct circuit - pull up resistors and such.
@@ -319,44 +319,58 @@ void loop() {
         setVal(val);
         varReady = false;
       } else {
-        if (val >= 1 && val <= 20) {
-          //varReady = true;
+        if (val >= 11 && val <= 16) {     // setting variables
+          varReady = true;
           switch (val) {
-            case 1:
-              varSet = "xSteps";
-              moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
-              varReady = true;
-              break;
-            case 2:
-              varSet = "xDirectVar";
-              moveMotor(1, xDirectPin, 100, xMotor);
-              break;
-            case 3:
-              varSet = "xDataPoints";
-              moveMotor(1, xDirectPin, 250, xMotor);
-              break;
             case 11:
-              varSet = "zSteps";
+              varSet = "xSteps";
               break;
             case 12:
-              varSet = "zDirectVar";
+              varSet = "xDirectVar";
               break;
             case 13:
+              varSet = "xDataPoints";
+              break;
+            case 14:
+              varSet = "zSteps";
+              break;
+            case 15:
+              varSet = "zDirectVar";
+              break;
+            case 16:
               varSet = "zScans";
               break;
             default:
-              //varReady = false;
+              // this should never hit since ever case is accounted for,
+              //   but just in case, we make sure nothing weird happens.
+              varReady = false;
               break;
           }
-        } else if (val == 42) {
-          // defaults: (0, 7, 100, 8)
-          moveMotor(xDirectVar,xDirectPin,xSteps,xMotor); // TODO: get rid of this, change to form
-          //moveMotor(zDirectVar,xDirectPin,xSteps,xMotor); //       like z variable setting - below
+        } else {
+          switch (val) {
+            case 21:
+              ExecuteMeasurement();
+              break;
+            case 22: // take spectrum at current location.
+              specTrigger();
+              break;
+            // case 23:
+            //   RunXMeasurement();
+            //   break;
+            // case 24:
+            //   RunZMeasurement();
+            //   break;
+            case 42:
+              moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+              break;
+            default:
+              break;
+          }
         }
       }
       Serial.println(val); /* Must be here to tell MATLAB
                               the roundTrip worked           */
-      delay(15);
+      // delay(15);
       
       s=-1;  /* we are done with the aux function so -1      */
       break; /* s=400 taken care of                          */
@@ -380,16 +394,6 @@ void loop() {
 
 // Functions from our old test arduino program:
 
-/*void closeLimitHit() {
-  systemOkay = false;
-  Serial.println("\n\n========Close Limit Hit!!!!!!!==========\n\n");
-}
-
-void farLimitHit() {
-  systemOkay = false;
-  Serial.println("\n\n========Far Limit Hit!!!!!!!==========\n\n");
-}*/
-
 void setVal(byte val) {
   // Create character array with enough space to fit String varSet:
   // - not sure why, but getting rid of the +1 made strcmp NOT WORK!!
@@ -412,28 +416,37 @@ void setVal(byte val) {
   }
 }
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  EXECUTE CODE
+   
+  This function sets up the 2D scan & spectrometer triggering.
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void ExecuteMeasurement() {
-    //dataPoints();
-    //setZScans();
-    //selectXDirection();
-    //selectZDirection();
-    //setXSteps();
-    //setZSteps();
-    for (int i = zScans; i > 0; i--) {
-      for (int i = xDataPoints; i > 0; i--) {
-        moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
-        delay(100);
-        //specTrigger(); // TODO: uncomment and add this function.
-        delay(100);
-      }
-      
-      //returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor); // TODO: uncomment and add this function.
-      moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+  for (int i = zScans; i > 0; i--) {
+    for (int j = xDataPoints; j > 0; j--) {
+      moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+      delay(100);
+      specTrigger();
+      delay(100);
     }
     
-    //returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor); // TODO: uncomment.
+    returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
+    moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+  }
+  
+  returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor);
 }
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ MOVE MOTOR
+ 
+ This function is what pulses the motor drivers to make the motors step.
+ Arguments:
+ dir         = the direction to move,
+ dirPin      = pin to set direction on,
+ numSteps    = the number of steps to take,
+ motorChoice = which motor we are moving (x or z motor). 
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void moveMotor(int dir, int dirPin, int numSteps, int motorChoice) {
   digitalWrite(dirPin,dir);
   delay(80);
@@ -446,4 +459,42 @@ void moveMotor(int dir, int dirPin, int numSteps, int motorChoice) {
     }
   }
 }
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ SPECTROMETER TRIGGER
+ 
+ The following function creates the trigger pulse to the spectrometer.
+ A pulse will be sent out after every call to the function.
+ Delays should be used to give spectrometer time to take data.
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+void specTrigger() {
+  delay(100);
+  if (systemOkay) {
+    digitalWrite(trigger,HIGH);
+    delay(100);                  
+    digitalWrite(trigger,LOW);
+    delay(100);
+  }
+}
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ RETURN MOTOR
+ 
+ Returns the motor the the previous position before measurements were taken.
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+void returnMotor(int dir,int dirPin, int stepNumber, int dataPoints, int motorChoice) {
+  int stepLength = stepNumber * dataPoints;
+  int newDir = !dir; // reverse direction of motor.
+  moveMotor(newDir,dirPin,stepLength,motorChoice);
+}
+
+/*void closeLimitHit() {
+  systemOkay = false;
+  Serial.println("\n\n========Close Limit Hit!!!!!!!==========\n\n");
+}
+
+void farLimitHit() {
+  systemOkay = false;
+  Serial.println("\n\n========Far Limit Hit!!!!!!!==========\n\n");
+}*/
 
