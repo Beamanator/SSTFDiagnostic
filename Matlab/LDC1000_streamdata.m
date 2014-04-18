@@ -32,24 +32,26 @@ function [ Rp_buf, Tp_buf ] = LDC1000_streamdata(sport, mode, N, M)
 global KEY_IS_PRESSED
 KEY_IS_PRESSED = 0;
 
-h1=figure(1);
-subplot(3,1,1)
-axis tight
-xlabel('Samples')
-ylabel('Rp')
-subplot(3,1,2)
-axis tight
-xlabel('Samples')
-ylabel('Tp')
-subplot(3,1,3)
-axis tight
-xlabel('Rp')
-ylabel('Tp')
+% - removed so data collection is faster process.
+%h1=figure(1);
+%subplot(3,1,1)
+%axis tight
+%xlabel('Samples')
+%ylabel('Rp')
+%subplot(3,1,2)
+%axis tight
+%xlabel('Samples')
+%ylabel('Tp')
+%subplot(3,1,3)
+%axis tight
+%xlabel('Rp')
 
-set(h1, 'KeyPressFcn', @Local_KeyPressFcn)
+%ylabel('Tp')
 
+%set(h1, 'KeyPressFcn', @Local_KeyPressFcn)
+disp(N);
 if(N<2048)
-    N=2048;
+    N=2048; % = 2 ^ 11
 end
 
 N=512*ceil(N/512);
@@ -93,19 +95,19 @@ while(acq)
     Tp_plot_buf((end-512+1):end,:)=Tp;
     
     %figure(1)
-    subplot(3,1,1)
-    plot(Rp_plot_buf);
+    %subplot(3,1,1)
+    %plot(Rp_plot_buf);
     
-    subplot(3,1,2)
-    plot(Tp_plot_buf);
+    %subplot(3,1,2)
+    %plot(Tp_plot_buf);
     
     %figure(2)
-    subplot(3,1,3)
-    plot(Rp_plot_buf,Tp_plot_buf,'.');
+    %subplot(3,1,3)
+    %plot(Rp_plot_buf,Tp_plot_buf,'.');
    
-    drawnow;
+    %drawnow;
     dcount=dcount+512;
-    disp(['count=' num2str(dcount)  ' ptr=' num2str(mod(dcount,N))]);
+    %disp(['count=' num2str(dcount)  ' ptr=' num2str(mod(dcount,N))]);
     
     if((mode==0) && dcount>=N)
         acq=0;

@@ -34,6 +34,7 @@ end
 cmd='06';
 regs=dec2hex(33,2);
 str=[cmd regs '0000'];
+%str is '06210000'
 fwrite(sport,str);
 
 c=sport.BytesAvailable;

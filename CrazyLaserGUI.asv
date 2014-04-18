@@ -74,10 +74,8 @@ function[] = CrazyLaserGUI
         %Parameters
         data.Parameters.ExampleValue = 0.0;
         data.Parameters.stepValue = 0.0;
+        data.Parameters.StepSize = 'EighthStep';
         data.Parameters.Position = 0.0;
-
-        %data.Parameters.StepSize = 'EighthStep';
-        data.Parameters.StepSize = '1/8';
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
@@ -110,7 +108,7 @@ function[] = CrazyLaserGUI
         %-----------------------------------------------------------------%
         
         %---------------------------- Main Figure ------------------------%
-        %----- Static text (stext):
+        %----- static text (stext):
         %--- Example Static Text Component:
         %- uicontrol properties website guide:
         %- http://www.mathworks.com/help/matlab/ref/uicontrol_props.html
@@ -125,10 +123,6 @@ function[] = CrazyLaserGUI
             'HorizontalAlignment','left',...
             'position',[0.1 0.9 0.08 0.04]...
         );
-<<<<<<< HEAD
-
-        %--- Editable text (etext):
-=======
         Position_stext = uicontrol(...
             'parent',InductionSensor_panel,...
             'units','normalized',...
@@ -141,7 +135,6 @@ function[] = CrazyLaserGUI
         );
     
         %----- editable text (etext):
->>>>>>> FETCH_HEAD
         Test_etext = uicontrol(...
             'parent',Example_panel,...
             'units','normalized',...
@@ -151,13 +144,8 @@ function[] = CrazyLaserGUI
             'position',[0.05 0.85 0.2 0.1],...
             'callback',@ButtonCallback...
         );
-<<<<<<< HEAD
-
-        %----- Buttons:
-=======
     
         %----- buttons:
->>>>>>> FETCH_HEAD
         %--- Example Button Component:
         GetPosition_button = uicontrol(...
             'parent',InductionSensor_panel,...
@@ -200,7 +188,7 @@ function[] = CrazyLaserGUI
         
         %--- This is how you make a lable on the top bar of the GUI.
         %- Main_Figure = which uipanel to put it on.
-        %- label: 'File' = text to appear on menu to click on.
+        %- label: File = text to appear on menu to click on.
         File_menu = uimenu(...
             'parent', Main_Figure,...
             'label','File'...
@@ -347,18 +335,16 @@ function[] = CrazyLaserGUI
                 %    disp('nope');
                 %end
             case handles.Test2_menu                
-                %box = handles.Test2_menu;
+                box = handles.Test2_menu;
 
-                %checked = get(box, 'Checked');
-                %if strcmp(checked,'off');
-                %    set(box, 'Checked', 'on');
-                %else
-                %    set(box, 'Checked', 'off');
-                %end
-                disp('Testing roundTrip(42)');
-                if isfield(data.Hardware, 'Arduino')
-                    data.Hardware.Arduino.roundTrip(42);
+                checked = get(box, 'Checked');
+                if strcmp(checked,'off');
+                    set(box, 'Checked', 'on');
+                else
+                    set(box, 'Checked', 'off');
                 end
+                disp('Do test with arduino here - roundTrip()');
+                data.Hardware.Arduino.roundTrip(1);
             % These can be simplified - not calling unCheckStep 4 times!
             case handles.FullStep
                 setStepSize('1');
