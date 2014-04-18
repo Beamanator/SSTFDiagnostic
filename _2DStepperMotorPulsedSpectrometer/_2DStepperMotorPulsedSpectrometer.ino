@@ -44,22 +44,25 @@
  * - Samuel Cooper
  */
 
-int xDirectPin = 7;      //This pin sets the x Direction Pin for the x motor to move.
-int zDirectPin = 9;      //This pin sets the z Direction Pin for the z motor
-int xMotor = 6;         //This pin is the pulse output for the X-direction motor.
-int zMotor = 8;
-int xSteps = 50;          //This is the number of steps we'll move the motor.  Default to 50 steps for testing.
-int zSteps = 50;
+int xDirectPin = 7;   // pin # for x direction.
+int zDirectPin = 9;   // pin # for z direction.
+int xMotor = 6;  // pin # for x-axis motor.
+int zMotor = 8;  // pin # for z-axis motor.
+int xSteps = 100;  // # Steps to move in x-axis.
+int zSteps = 0;  // # Steps to move in z-axis.
 // 0 = 0th interrupt, but on pin 2.
 // 1 = 1st interrupt, but on pin 3. [didn't work until using correct circuit - pull up resistors and such.
-//int limitSwitchWhite = 0;   //We will be using this pin for the limit switch motor stop function.  
-//int limitSwitchBlue = 1;
-//int trigger = 13;       //This pin will be used to trigger the spectrometer. 
+int limitSwitchWhite = 0;   //We will be using this pin for the limit switch motor stop function.  
+int limitSwitchBlue = 1;
+int trigger = 13;       //This pin will be used to trigger the spectrometer. 
 int xDirectVar = 0;    // 0 = left, 1 = right.
 int zDirectVar = 1;    // 1 = left, 0 = right.
 
-int xDataPoints = 2;   // Defaults to 2 for testing.
-int zScans = 2;        // Defaults to 2 for testing.
+int xDataPoints = 0;   // Defaults to 2 for testing.
+int zScans = 0;        // Defaults to 2 for testing.
+
+String varSet;
+boolean varReady = false;
 
 volatile boolean systemOkay = true; // volatile means variable could change at any moment.
 
@@ -75,8 +78,8 @@ void setup() {
   //attachInterrupt(limitSwitchBlue, closeLimitHit, FALLING);
   //attachInterrupt(limitSwitchWhite, farLimitHit, FALLING);
   // Spectrometer pin:
-  //pinMode(trigger,OUTPUT);
-  //digitalWrite(trigger,LOW);
+  pinMode(trigger,OUTPUT);
+  digitalWrite(trigger,LOW);
   delay(1000);
   
   /* initialize serial                                       */
@@ -310,23 +313,50 @@ void loop() {
       case 400:
       /* the second value (val) can really be anything here  */
       
-      /* This is an auxiliary function that returns the ASCII 
-         value of its first argument. It is provided as an 
-         example for people that want to add their own code  */
-         
-      /* your own code goes here instead of the serial print */
-      //Serial.println(val);
-      
-      if (val==43) {
-        moveMotor(0,xDirectPin,xSteps,xMotor);
-      } else if (val==42) {
-        moveMotor(1,xDirectPin,xSteps,xMotor);
-      } else if (val==41) {
-        moveMotor(0,zDirectPin,zSteps,zMotor);
-      } else if (val==40) {
-        moveMotor(1,zDirectPin,zSteps,zMotor);
+      // boolean varReady begins FALSE.
+      if (varReady) {
+        moveMotor(1, xDirectPin, 25, xMotor);
+        setVal(val);
+        varReady = false;
+      } else {
+        if (val >= 1 && val <= 20) {
+          //varReady = true;
+          switch (val) {
+            case 1:
+              varSet = "xSteps";
+              moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+              varReady = true;
+              break;
+            case 2:
+              varSet = "xDirectVar";
+              moveMotor(1, xDirectPin, 100, xMotor);
+              break;
+            case 3:
+              varSet = "xDataPoints";
+              moveMotor(1, xDirectPin, 250, xMotor);
+              break;
+            case 11:
+              varSet = "zSteps";
+              break;
+            case 12:
+              varSet = "zDirectVar";
+              break;
+            case 13:
+              varSet = "zScans";
+              break;
+            default:
+              //varReady = false;
+              break;
+          }
+        } else if (val == 42) {
+          // defaults: (0, 7, 100, 8)
+          moveMotor(xDirectVar,xDirectPin,xSteps,xMotor); // TODO: get rid of this, change to form
+          //moveMotor(zDirectVar,xDirectPin,xSteps,xMotor); //       like z variable setting - below
+        }
       }
-      Serial.println(val);
+      Serial.println(val); /* Must be here to tell MATLAB
+                              the roundTrip worked           */
+      delay(15);
       
       s=-1;  /* we are done with the aux function so -1      */
       break; /* s=400 taken care of                          */
@@ -360,13 +390,54 @@ void farLimitHit() {
   Serial.println("\n\n========Far Limit Hit!!!!!!!==========\n\n");
 }*/
 
-void moveMotor(int dir, int dirPin, int stepNumber, int motorChoice) {
+void setVal(byte val) {
+  // Create character array with enough space to fit String varSet:
+  // - not sure why, but getting rid of the +1 made strcmp NOT WORK!!
+  char charBuff[varSet.length()+1];
+  // Push characters of String varSet into array charBuff:
+  varSet.toCharArray(charBuff, varSet.length()+1);
+  // Compare char array charBuff with variable names:
+  if (strcmp(charBuff, "zSteps") == 0) {
+    zSteps = val;
+  } else if (strcmp(charBuff, "xSteps") == 0) {
+    xSteps = val;
+  } else if (strcmp(charBuff, "zDirectVar") == 0) {
+    zDirectVar = val;
+  } else if (strcmp(charBuff, "xDirectVar") == 0) {
+    xDirectVar = val;
+  } else if (strcmp(charBuff, "zScans") == 0) {
+    zScans = val;
+  } else if (strcmp(charBuff, "xDataPoints") == 0) {
+    xDataPoints = val;
+  }
+}
+
+void ExecuteMeasurement() {
+    //dataPoints();
+    //setZScans();
+    //selectXDirection();
+    //selectZDirection();
+    //setXSteps();
+    //setZSteps();
+    for (int i = zScans; i > 0; i--) {
+      for (int i = xDataPoints; i > 0; i--) {
+        moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+        delay(100);
+        //specTrigger(); // TODO: uncomment and add this function.
+        delay(100);
+      }
+      
+      //returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor); // TODO: uncomment and add this function.
+      moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+    }
+    
+    //returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor); // TODO: uncomment.
+}
+
+void moveMotor(int dir, int dirPin, int numSteps, int motorChoice) {
   digitalWrite(dirPin,dir);
-  //Serial.print("Moving the stepper motor in the ");
-  //Serial.print(dir);
-  //Serial.println(" direction.");
   delay(80);
-  for (int i = stepNumber; i > 0; i--) {
+  for (int i = numSteps; i > 0; i--) {
     if (systemOkay) { // systemOkay is the variable to make sure the motor is not going to hit and end.
       digitalWrite(motorChoice,HIGH);
       delay(10);
