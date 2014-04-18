@@ -313,6 +313,9 @@ void loop() {
       case 400:
       /* the second value (val) can really be anything here  */
       
+      Serial.println(val); /* Must be here to tell MATLAB
+                                the roundTrip worked         */
+                                
       // boolean varReady begins FALSE.
       if (varReady) {
         moveMotor(1, xDirectPin, 25, xMotor);
@@ -368,9 +371,6 @@ void loop() {
           }
         }
       }
-      Serial.println(val); /* Must be here to tell MATLAB
-                              the roundTrip worked           */
-      // delay(15);
       
       s=-1;  /* we are done with the aux function so -1      */
       break; /* s=400 taken care of                          */
