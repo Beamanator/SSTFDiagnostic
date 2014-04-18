@@ -337,15 +337,18 @@ function[] = CrazyLaserGUI
                 %    disp('nope');
                 %end
             case handles.Test2_menu                
-                box = handles.Test2_menu;
+                %box = handles.Test2_menu;
 
-                checked = get(box, 'Checked');
-                if strcmp(checked,'off');
-                    set(box, 'Checked', 'on');
-                else
-                    set(box, 'Checked', 'off');
+                %checked = get(box, 'Checked');
+                %if strcmp(checked,'off');
+                %    set(box, 'Checked', 'on');
+                %else
+                %    set(box, 'Checked', 'off');
+                %end
+                disp('Testing roundTrip(42)');
+                if isfield(data.Hardware, 'Arduino')
+                    data.Hardware.Arduino.roundTrip(42);
                 end
-                disp('Do test with arduino here - roundTrip()');
             % These can be simplified - not calling unCheckStep 4 times!
             case handles.FullStep
                 setStepSize('1');

@@ -48,18 +48,18 @@ int xDirectPin = 7;      //This pin sets the x Direction Pin for the x motor to 
 int zDirectPin = 9;      //This pin sets the z Direction Pin for the z motor
 int xMotor = 6;         //This pin is the pulse output for the X-direction motor.
 int zMotor = 8;
-int xSteps = 0;          //This is the number of steps we'll move the motor.  Default to zero steps for safety.
-int zSteps = 0;
+int xSteps = 50;          //This is the number of steps we'll move the motor.  Default to 50 steps for testing.
+int zSteps = 50;
 // 0 = 0th interrupt, but on pin 2.
 // 1 = 1st interrupt, but on pin 3. [didn't work until using correct circuit - pull up resistors and such.
-int limitSwitchWhite = 0;   //We will be using this pin for the limit switch motor stop function.  
-int limitSwitchBlue = 1;
-int trigger = 13;       //This pin will be used to trigger the spectrometer. 
-int xDirectVar = 0;      //This variable is either 0 or 1 or true or false, which will be read as the direction of the motor.
-int zDirectVar = 0;
+//int limitSwitchWhite = 0;   //We will be using this pin for the limit switch motor stop function.  
+//int limitSwitchBlue = 1;
+//int trigger = 13;       //This pin will be used to trigger the spectrometer. 
+int xDirectVar = 0;    // 0 = left, 1 = right.
+int zDirectVar = 1;    // 1 = left, 0 = right.
 
-int xDataPoints = 0;
-int zScans = 0;
+int xDataPoints = 2;   // Defaults to 2 for testing.
+int zScans = 2;        // Defaults to 2 for testing.
 
 volatile boolean systemOkay = true; // volatile means variable could change at any moment.
 
@@ -72,11 +72,11 @@ void setup() {
   pinMode(xMotor,OUTPUT);
   pinMode(zMotor,OUTPUT);
   // Interrupts for limit switches:
-  attachInterrupt(limitSwitchBlue, closeLimitHit, FALLING);
-  attachInterrupt(limitSwitchWhite, farLimitHit, FALLING);
+  //attachInterrupt(limitSwitchBlue, closeLimitHit, FALLING);
+  //attachInterrupt(limitSwitchWhite, farLimitHit, FALLING);
   // Spectrometer pin:
-  pinMode(trigger,OUTPUT);
-  digitalWrite(trigger,LOW);
+  //pinMode(trigger,OUTPUT);
+  //digitalWrite(trigger,LOW);
   delay(1000);
   
   /* initialize serial                                       */
@@ -315,11 +315,18 @@ void loop() {
          example for people that want to add their own code  */
          
       /* your own code goes here instead of the serial print */
-      Serial.println(val);
+      //Serial.println(val);
       
-      if (val==1) {
-        moveMotor(xDirectVar,xDirectPin,xSteps,xMotor)
+      if (val==43) {
+        moveMotor(0,xDirectPin,xSteps,xMotor);
+      } else if (val==42) {
+        moveMotor(1,xDirectPin,xSteps,xMotor);
+      } else if (val==41) {
+        moveMotor(0,zDirectPin,zSteps,zMotor);
+      } else if (val==40) {
+        moveMotor(1,zDirectPin,zSteps,zMotor);
       }
+      Serial.println(val);
       
       s=-1;  /* we are done with the aux function so -1      */
       break; /* s=400 taken care of                          */
@@ -343,7 +350,7 @@ void loop() {
 
 // Functions from our old test arduino program:
 
-void closeLimitHit() {
+/*void closeLimitHit() {
   systemOkay = false;
   Serial.println("\n\n========Close Limit Hit!!!!!!!==========\n\n");
 }
@@ -351,13 +358,13 @@ void closeLimitHit() {
 void farLimitHit() {
   systemOkay = false;
   Serial.println("\n\n========Far Limit Hit!!!!!!!==========\n\n");
-}
+}*/
 
 void moveMotor(int dir, int dirPin, int stepNumber, int motorChoice) {
   digitalWrite(dirPin,dir);
-  Serial.print("Moving the stepper motor in the ");
-  Serial.print(dir);
-  Serial.println(" direction.");
+  //Serial.print("Moving the stepper motor in the ");
+  //Serial.print(dir);
+  //Serial.println(" direction.");
   delay(80);
   for (int i = stepNumber; i > 0; i--) {
     if (systemOkay) { // systemOkay is the variable to make sure the motor is not going to hit and end.
