@@ -1,4 +1,4 @@
-CrazyLaserGUI
+SSTF laser diagnostics
 ==================
 Project title:
 Scanning spectral diagnostics for spatio-temporal focused ultrashort laser pulses
