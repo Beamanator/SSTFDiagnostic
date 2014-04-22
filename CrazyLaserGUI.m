@@ -766,7 +766,20 @@ function[] = CrazyLaserGUI
         
         switch gcbo
             case handles.XSteps_etext
-                disp('yay im in the callback!');
+                % check to make sure values are strings:
+                str = get(srv,'String');
+                if isempty(str2num(str))
+                    set(src,'String','0');
+                    warndlg('Input must be numerical');
+                end
+
+            case handles.ZSteps_etext
+                % check to make sure values are strings:
+                str = get(srv,'String');
+                if isempty(str2num(str))
+                    set(src,'String','0');
+                    warndlg('Input must be numerical');
+                end
                 
         end
     end
@@ -776,9 +789,19 @@ function[] = CrazyLaserGUI
         handles = data.handles;
         
         switch gcbo
-            case handles.Example_button
-                data.Parameters.ExampleValue = data.Parameters.ExampleValue + 0.5;
-                set(handles.Example_stext,'string',num2str(data.Parameters.ExampleValue));
+            case handles.TakeSpectrum_button
+                % Not tested yet!
+                a = data.Parameters.Arduino;
+                a.roundTrip(22);
+
+            case handles.MotorParametersSave_button
+                % Not tested yet:
+                xStep = get(handles.XSteps_etext, 'String');
+                zStep = get(handles.ZSteps_etext, 'String');
+                xDirection = get(handles.XDirection_etext, 'String');
+                zDirection = get(handles.ZDirection_etext, 'String');
+                xPoints = get(handles.SpectraCount_etext, 'String');
+                zScans = get(handles.ScanCount_etext, 'String');
 
             case handles.Test_etext
                 % stepValue = get(handles.Test_etext,'string');
