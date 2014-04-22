@@ -61,6 +61,9 @@ int zDirectVar = 1;    // 1 = left, 0 = right.
 int xDataPoints = 0;   // Defaults to 2 for testing.
 int zScans = 0;        // Defaults to 2 for testing.
 
+int DriverDelay = 10;
+int SpectrumDelay = 100;
+
 String varSet;
 boolean varReady = false;
 
@@ -322,7 +325,7 @@ void loop() {
         setVal(val);
         varReady = false;
       } else {
-        if (val >= 11 && val <= 16) {     // setting variables
+        if (val >= 11 && val <= 18) {     // setting variables
           varReady = true;
           switch (val) {
             case 11:
@@ -343,6 +346,12 @@ void loop() {
             case 16:
               varSet = "zScans";
               break;
+            case 17:
+              varSet = "SpectrumDelay";
+              break;
+            case 18:
+              varSet = "DriverDelay";
+              break;
             default:
               // this should never hit since ever case is accounted for,
               //   but just in case, we make sure nothing weird happens.
@@ -357,12 +366,20 @@ void loop() {
             case 22: // take spectrum at current location.
               specTrigger();
               break;
-            // case 23:
-            //   RunXMeasurement();
-            //   break;
-            // case 24:
-            //   RunZMeasurement();
-            //   break;
+            case 23:
+              RunXMeasurement();
+              break;
+            case 24:
+              RunZMeasurement();
+              break;
+            case 25:
+              varSet = "addXSteps";
+              varReady = true;
+              break;
+            case 26:
+              varSet = "addZSteps";
+              varReady = true;
+              break;
             case 42:
               moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
               break;
@@ -413,6 +430,14 @@ void setVal(byte val) {
     zScans = val;
   } else if (strcmp(charBuff, "xDataPoints") == 0) {
     xDataPoints = val;
+  } else if (strcmp(charBuff, "DriverDelay") == 0) {
+    DriverDelay = val;
+  } else if (strcmp(charBuff, "SpectrumDelay") == 0) {
+    SpectrumDelay = val;
+  } else if (strcmp(charBuff, "addXSteps") == 0) {
+    xSteps += val;
+  } else if (strcmp(charBuff, "addZSteps") == 0) {
+    zSteps += val;
   }
 }
 
@@ -425,9 +450,7 @@ void ExecuteMeasurement() {
   for (int i = zScans; i > 0; i--) {
     for (int j = xDataPoints; j > 0; j--) {
       moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
-      delay(100);
       specTrigger();
-      delay(100);
     }
     
     returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
@@ -435,6 +458,29 @@ void ExecuteMeasurement() {
   }
   
   returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor);
+}
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  RUNS MEASUREMENT IN Z AXIS ONLY
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+void RunZMeasurement() {
+  for (int i = zScans; i > 0; i--) {
+    moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+    specTrigger();
+  }
+  returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor);
+}
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  RUNS MEASUREMENT IN X AXIS ONLY
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+void RunXMeasurement() {
+  for (int j = xDataPoints; j > 0; j--) {
+    moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+    specTrigger();
+  }
+
+  returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
 }
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -449,13 +495,13 @@ void ExecuteMeasurement() {
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void moveMotor(int dir, int dirPin, int numSteps, int motorChoice) {
   digitalWrite(dirPin,dir);
-  delay(80);
+  delay(DriverDelay);
   for (int i = numSteps; i > 0; i--) {
     if (systemOkay) { // systemOkay is the variable to make sure the motor is not going to hit and end.
       digitalWrite(motorChoice,HIGH);
-      delay(10);
+      delay(DriverDelay);
       digitalWrite(motorChoice,LOW);
-      delay(10);
+      delay(DriverDelay);
     }
   }
 }
@@ -468,12 +514,12 @@ void moveMotor(int dir, int dirPin, int numSteps, int motorChoice) {
  Delays should be used to give spectrometer time to take data.
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void specTrigger() {
-  delay(100);
+  delay(SpectrumDelay);
   if (systemOkay) {
     digitalWrite(trigger,HIGH);
-    delay(100);                  
+    delay(SpectrumDelay);                  
     digitalWrite(trigger,LOW);
-    delay(100);
+    delay(SpectrumDelay);
   }
 }
 
