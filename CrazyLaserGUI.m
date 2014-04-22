@@ -73,37 +73,17 @@ function[] = CrazyLaserGUI
         %data.Parameters = load('frogscan.mat'); % - how FrogScan starts
         %Parameters
         data.Parameters.ExampleValue = 0.0;
-        data.Parameters.stepValue = 0.0;
         data.Parameters.Position = 0.0;
-
-        %data.Parameters.StepSize = 'EighthStep';
-        data.Parameters.StepSize = '1/8';
         
         %-----------------------------------------------------------------%
         %%%                            Panels        (Main_Figure)      %%%
         %-----------------------------------------------------------------%
 
-        %--- Example Panel:
         %- parent: Main_Figure = Panel to inherit location from
-        %- title: 'Example' = Name to go inside box line surrounding panel
+        %- title: 'Motor Parameters' = Name to go inside box line surrounding panel
         %- units: 'normalized' = idk
         %- backgroundcolor: bkc = color defined above
         %- position: [x y Wx Wy] - in percentages of parent panel
-   %     Example_panel = uipanel(...
-   %         'parent',Main_Figure,...
-   %         'title','Example',...
-   %         'units','normalized',...
-   %         'backgroundcolor',bkc,...
-   %         'position',[.04 .08 1/5 1/5]...
-   %     );
-   %     InductionSensor_panel = uipanel(...
-   %         'parent',Main_Figure,...
-   %         'title','Position Sensor',...
-   %         'units','normalized',...
-   %         'backgroundcolor',bkc,...
-   %         'position',[1/2 8/10 3/10 0.19]...
-   %     );
-        % New Additions that have NOT been tested:
         MotorParameters_panel = uipanel(...
             'parent',Main_Figure,...
             'title','Motor Parameters',...
@@ -160,7 +140,10 @@ function[] = CrazyLaserGUI
         %-----------------------------------------------------------------%
         
         %---------------------------- Main Figure ------------------------%
-        %----- Static text (stext):
+        %- uicontrol properties website guide:
+        %- http://www.mathworks.com/help/matlab/ref/uicontrol_props.html
+
+        %---------------- Static text (stext): -----------------
         
         %--- Constants Panel stext:
         XMotorPin_stext = uicontrol(...
@@ -401,33 +384,8 @@ function[] = CrazyLaserGUI
             'HorizontalAlignment','left',...
             'position',[0.07 0.6 0.59 0.12]...
         );
-    
-        %--- Example Static Text Component:
-        %- uicontrol properties website guide:
-        %- http://www.mathworks.com/help/matlab/ref/uicontrol_props.html
-   %     Example_stext = uicontrol(...
-   %         'parent',Main_Figure,...
-   %         'units','normalized',...
-   %         'style','text',...
-   %         'string','0.0',...
-   %         'value',0,...
-   %         'fontsize',14,...
-   %         'fontweight','bold',..
-   %         'HorizontalAlignment','left',...
-   %         'position',[0.1 0.9 0.08 0.04]...
-   %     );
-   %     Position_stext = uicontrol(...
-   %         'parent',InductionSensor_panel,...
-   %         'units','normalized',...
-   %         'style','text',...
-   %         'string','-',...
-   %         'value',0,...
-   %         'fontsize',14,...
-   %         'HorizontalAlignment','left',...
-   %         'position',[0.44 0.65 0.52 0.3]...
-   %     );
 
-        %--- Editable text (etext):
+        %---------------- Editable text (etext): -----------------
         
         %--- Motor Parameters panel:
         XSteps_etext = uicontrol(...
@@ -511,20 +469,10 @@ function[] = CrazyLaserGUI
             'position',[0.73 0.6 0.2 0.12],...
             'callback',@EditCallback...
         );
-        
-   %     Test_etext = uicontrol(...
-   %         'parent',Example_panel,...
-   %         'units','normalized',...
-   %         'style','edit',...
-   %         'string','0.0',...
-   %         'backgroundcolor','w',...
-   %         'position',[0.05 0.7 0.4 0.25],...
-   %         'callback',@ButtonCallback...
-   %     );
 
-        %----- Buttons:
+        %----------------------- Buttons ------------------------
         
-        %--- Run Scans panel:
+        %--- Run Scans panel buttons:
         XScan_button = uicontrol(...
             'parent',RunScans_panel,...
             'units','normalized',...
@@ -612,44 +560,8 @@ function[] = CrazyLaserGUI
             'position',[.1 0.2 2/5 0.3],...
             'callback',@ButtonCallback...
         );
-    
-        %--- Example Button Component:
-   %     Example_button = uicontrol(...
-   %         'parent',Main_Figure,...
-   %         'units','normalized',...
-   %         'style','pushbutton',...
-   %         'string','Add 0.5!',...
-   %         'position',[0.85 0.5 0.1 0.3],...
-   %         'callback',@ButtonCallback...
-   %     );
-   %     GetPosition_button = uicontrol(...
-   %         'parent',InductionSensor_panel,...
-   %         'units','normalized',...
-   %         'string','Get Data',...
-   %         'style','pushbutton',...
-   %         'position',[0.04 0.65 0.35 0.3],...
-   %         'callback',@ButtonCallback...
-   %     );
-   %     TestMove_button = uicontrol(...
-   %         'parent',Main_Figure,...
-   %         'units','normalized',...
-   %         'style','pushbutton',...
-   %         'Enable','on',...
-   %         'string','Move Motor!',...
-   %         'position',[0.85 0.2 0.1 0.3],...
-   %         'callback',@ButtonCallback...
-   %     );
-   %     Test_step = uicontrol(...
-   %         'parent',Example_panel,...
-   %         'units','normalized',...
-   %         'style','pushbutton',...
-   %         'Enable','off',...
-   %         'string','TestMove',...
-   %         'position',[0.05 0.37 0.4 0.25],...
-   %         'callback',@ButtonCallback...
-   %     );
    
-        %----- Lines:
+        %--------------------- Solid Lines: ---------------------
         ConstantsLine = uicontrol(...
             'parent',Constants_panel,...
             'units','normalized',...
@@ -716,37 +628,6 @@ function[] = CrazyLaserGUI
                 'callback',@MenuCallback...
             );
         
-            %removed 'Enable','off',...
-        StepSize_menu = uimenu(...
-            'parent', Main_Figure,...
-            'label','Step Size'...
-        );
-            FullStep = uimenu(...
-                'parent', StepSize_menu,...
-                'label','Full (1)',...
-                'separator','off',...
-                'callback',@MenuCallback...
-            );
-            HalfStep = uimenu(...
-                'parent', StepSize_menu,...
-                'label','Half (1/2)',...
-                'separator','off',...
-                'callback',@MenuCallback...
-            );
-            QuarterStep = uimenu(...
-                'parent', StepSize_menu,...
-                'label','Quarter (1/4)',...
-                'separator','off',...
-                'callback',@MenuCallback...
-            );
-            EighthStep = uimenu(...
-                'parent', StepSize_menu,...
-                'label','Eighth (1/8)',...
-                'separator','off',...
-                'Checked','on',...
-                'callback',@MenuCallback...
-            );
-        
         Test_menu = uimenu(...
             'parent', Main_Figure,...
             'label','Test',...
@@ -765,9 +646,6 @@ function[] = CrazyLaserGUI
 
         %- HANDLES are used for events - button pressing, text changing, etc.
         %--- panel handles
-   %     data.handles.Example_panel = Example_panel;
-   %     data.handles.InductionSensor_panel = InductionSensor_panel;
-        % TODO - still not tested either:
         data.handles.MotorParameters_panel = MotorParameters_panel;
         data.handles.RunScans_panel = RunScans_panel;
         data.handles.Constants_panel = Constants_panel;
@@ -798,8 +676,6 @@ function[] = CrazyLaserGUI
         data.handles.SpectraCount_stext = SpectraCount_stext;
         data.handles.ScanCount_stext = ScanCount_stext;
         data.handles.CurrentPosition_stext = CurrentPosition_stext;
-   %     data.handles.Example_stext = Example_stext;
-   %     data.handles.Position_stext = Position_stext;
         
         %--- edit text
         data.handles.XSteps_etext = XSteps_etext;
@@ -810,7 +686,6 @@ function[] = CrazyLaserGUI
         data.handles.ScanCount_etext = ScanCount_etext;
         data.handles.SpectrumDelayValue_etext = SpectrumDelayValue_etext;
         data.handles.DriveDelayValue_etext = DriveDelayValue_etext;
-   %     data.handles.Test_etext = Test_etext;
         
         %--- button handles
         data.handles.XScan_button = XScan_button;
@@ -821,21 +696,11 @@ function[] = CrazyLaserGUI
         data.handles.TakeSpectrum_button = TakeSpectrum_button;
         data.handles.DelaysSave_button = DelaysSave_button;
         data.handles.GetPosition_button = GetPosition_button;
-   %     data.handles.Example_button = Example_button;
-   %     data.handles.TestMove_button = TestMove_button;
-   %     data.handles.Test_step = Test_step;
-   %     data.handles.GetPosition_button = GetPosition_button;
         
         %--- menu handles
         data.handles.ExitProgram = ExitProgram;
         data.handles.StartArduino = StartArduino;
         data.handles.StartInductionSensor = StartInductionSensor;
-        
-        data.handles.StepSize_menu = StepSize_menu;
-        data.handles.FullStep = FullStep;
-        data.handles.HalfStep = HalfStep;
-        data.handles.QuarterStep = QuarterStep;
-        data.handles.EighthStep = EighthStep;
         
         data.handles.Test_menu = Test_menu;
         data.handles.Test2_menu = Test2_menu;
@@ -862,7 +727,6 @@ function[] = CrazyLaserGUI
             case handles.StartArduino
                 StartArduino();
                 if isfield(data.Hardware, 'Arduino')
-                    set(handles.TestMove_button, 'Enable', 'on');
                     set(handles.StartArduino, 'Checked', 'on');
                     set(handles.StartArduino, 'Enable', 'off');
                 end
@@ -891,19 +755,6 @@ function[] = CrazyLaserGUI
                 if isfield(data.Hardware, 'Arduino')
                     data.Hardware.Arduino.roundTrip(42);
                 end
-            % These can be simplified - not calling unCheckStep 4 times!
-            case handles.FullStep
-                setStepSize('1');
-                set(handles.FullStep, 'Checked','on');
-            case handles.HalfStep
-                setStepSize('1/2');
-                set(handles.HalfStep, 'Checked','on');
-            case handles.QuarterStep
-                setStepSize('1/4');
-                set(handles.QuarterStep, 'Checked','on');
-            case handles.EighthStep
-                SetStepSize('1/8');
-                set(handles.EighthStep, 'Checked','on');
         end
         % Maybe call UpdateDisplay if we want?
     end
@@ -921,34 +772,25 @@ function[] = CrazyLaserGUI
     %--- ButtonCallback is the same as menuCallback, but with buttons!
     function ButtonCallback(srv,evnt)
         handles = data.handles;
-        stepValue = data.Parameters.stepValue;
         
         switch gcbo
             case handles.Example_button
                 data.Parameters.ExampleValue = data.Parameters.ExampleValue + 0.5;
                 set(handles.Example_stext,'string',num2str(data.Parameters.ExampleValue));
-                
-            case handles.TestMove_button
-               % Move('F',400);
-               % pause(5);
-               % Move('B',400);
-                Move('F',stepValue);
-                pause(5);
-                Move('B',stepValue);
-                
+
             case handles.Test_etext
-                stepValue = get(handles.Test_etext,'string');
-                if isempty(stepValue) %is something
-                    set(handles.Test_step, 'Enable', 'off');
-                    data.Parameters.stepValue = 0.0;
-                elseif not(isnan(str2double(stepValue)))
-                    set(handles.Test_step, 'Enable', 'on');
-                    data.Parameters.stepValue = str2double(stepValue);
-                elseif isnan(str2double(stepValue))
-                    disp(stepValue);
-                end
+                % stepValue = get(handles.Test_etext,'string');
+                % if isempty(stepValue) %is something
+                    % set(handles.Test_step, 'Enable', 'off');
+                    % data.Parameters.stepValue = 0.0;
+                % elseif not(isnan(str2double(stepValue)))
+                    % set(handles.Test_step, 'Enable', 'on');
+                    % data.Parameters.stepValue = str2double(stepValue);
+                % elseif isnan(str2double(stepValue))
+                    % disp(stepValue);
+                % end
                 
-                disp(data.Parameters.stepValue);
+                % disp(data.Parameters.stepValue);
                 
             case handles.GetPosition_button
                 %data.Parameters.Position = data.Parameters.Position + 0.5;
@@ -975,7 +817,7 @@ function[] = CrazyLaserGUI
     %--- in any case, src and evnt need to be accepted, no need to use 'em.
     function MF_DeleteFn(src,evnt)
         %- This works, but we'll try the other way.
-        %if strcmp(get(data.handles.TestMove_button, 'Enable'),'on')
+        %if strcmp(get(data.handles.TestMove_button, 'Enable'),'on')%TestMove_button not available anymore.
         %    delete(data.Hardware.Arduino);
         %    disp('Arduino disconnected');
         %elseif strcmp(get(data.handles.TestMove_button, 'Enable'),'off')
@@ -1005,103 +847,29 @@ function[] = CrazyLaserGUI
         end
 
         a = data.Hardware.Arduino;
-        
-        %a.pinMode(2, 'OUTPUT'); % direction pin
-        %a.pinMode(3, 'OUTPUT'); % step pin
-        %a.pinMode(4, 'OUTPUT'); % MS1
-        %a.pinMode(5, 'OUTPUT'); % MS2
-        
-        % digitalWrite(a, b): a = pin #, b = high (1) or low (0)
-        %a.digitalWrite(2, 1); % 1 = Forward ( AWAY from motor )
-        %a.digitalWrite(3, 0);
-        
-        SetStepSize('1/8');
-        
-        % Enable stepping menu:
-        set(data.handles.StepSize_menu, 'Enable', 'on');
-    end
-
-    %--- Sets step size for stepper motor according to this table:
-    % Microstepping Table:
-        %   MS1 (4)      MS2 (5)     resolution
-        %    0            0          full step
-        %    1            0          1/2  step
-        %    0            1          1/4  step
-        %    1            1          1/8  step
-    function SetStepSize(stepsize)
-        MS1_pin = 4; MS1_V = 0;
-        MS2_pin = 5; MS2_V = 0;
-        
-        if exist('data.Hardware.Arduino','var') && isa(data.Hardware.Arduino,'arduino') && isvalid(data.Hardware.Arduino),
-            a = data.Hardware.Arduino;
-            data.Parameters.StepSize = stepsize;
-            
-            unCheckStep();
-            
-            if (strcmp(stepsize, '1'))
-                % Already on this state
-            elseif (strcmp(stepsize, '1/2'))
-                MS1_V = 1;
-                MS2_V = 0;
-            elseif (strcmp(stepsize, '1/4'))
-                MS1_V = 0;
-                MS2_V = 1;
-            elseif (strcmp(stepsize, '1/8'))
-                MS1_V = 1;
-                MS2_V = 1;
-            end
-            
-            a.digitalWrite(MS1_pin, MS1_V);
-            a.digitalWrite(MS2_pin, MS2_V);
-        else
-            % Arduino is not connected yet.
-            disp('Must connect Arduino before setting its step size!');
-        end
     end
 
     %--- Moves Arduino a given direction and # of steps.
     %- if dir is 'F', will move stage AWAY from motor [forward]
     %- if dir is 'B', will move stage TOWARDS motor [backward]
-    function Move(dir, steps)
-        a = data.Hardware.Arduino;
-        switch dir
-            case 'F'
-                disp('Forward')
-                a.digitalWrite(2, 1);
-            case 'B'
-                disp('Backward')
-                a.digitalWrite(2, 0);
-        end
-        disp(steps);
-        for m = 1:steps
-            a.digitalWrite(3, 1);
-            pause(0.001); % - should be ~ 1 millisecond pause but ISN'T
-            a.digitalWrite(3, 0);
-            pause(0.001);
-        end
-    end
-
-    %--- un-checks the step menu item that is alerady checked.
-    %- Should be deleted if we change this to be inside the main GUI
-    %section
-    function unCheckStep()
-        handles = data.handles;
-        
-        Full = get(handles.FullStep, 'Checked');
-        Half = get(handles.HalfStep, 'Checked');
-        Quarter = get(handles.QuarterStep, 'Checked');
-        Eighth = get(handles.EighthStep, 'Checked');
-        
-        if (strcmp(Full, 'on'))
-            set(handles.FullStep, 'Checked', 'off');
-        elseif (strcmp(Half, 'on'))
-            set(handles.HalfStep, 'Checked', 'off');
-        elseif (strcmp(Quarter, 'on'))
-            set(handles.QuarterStep, 'Checked', 'off');
-        elseif (strcmp(Eighth, 'on'))
-            set(handles.EighthStep, 'Checked', 'off');
-        end
-    end
+    % function Move(dir, steps)
+    %     a = data.Hardware.Arduino;
+    %     switch dir
+    %         case 'F'
+    %             disp('Forward')
+    %             a.digitalWrite(2, 1);
+    %         case 'B'
+    %             disp('Backward')
+    %             a.digitalWrite(2, 0);
+    %     end
+    %     disp(steps);
+    %     for m = 1:steps
+    %         a.digitalWrite(3, 1);
+    %         pause(0.001); % - should be ~ 1 millisecond pause but ISN'T
+    %         a.digitalWrite(3, 0);
+    %         pause(0.001);
+    %     end
+    % end
 
     %--- Updates the display to conform with private parameter values.
     %- May not be necessary if we use set() to update everything immediately
