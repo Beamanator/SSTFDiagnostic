@@ -363,7 +363,7 @@ void loop() {
             case 21:
               ExecuteMeasurement();
               break;
-            case 22: // take spectrum at current location.
+            case 22:
               specTrigger();
               break;
             case 23:
@@ -373,11 +373,11 @@ void loop() {
               RunZMeasurement();
               break;
             case 25:
-              varSet = "addXSteps";
+              varSet = "addToXSteps";
               varReady = true;
               break;
             case 26:
-              varSet = "addZSteps";
+              varSet = "addToZSteps";
               varReady = true;
               break;
             case 42:
@@ -434,9 +434,9 @@ void setVal(byte val) {
     DriverDelay = val;
   } else if (strcmp(charBuff, "SpectrumDelay") == 0) {
     SpectrumDelay = val;
-  } else if (strcmp(charBuff, "addXSteps") == 0) {
+  } else if (strcmp(charBuff, "addToXSteps") == 0) {
     xSteps += val;
-  } else if (strcmp(charBuff, "addZSteps") == 0) {
+  } else if (strcmp(charBuff, "addToZSteps") == 0) {
     zSteps += val;
   }
 }
@@ -479,7 +479,6 @@ void RunXMeasurement() {
     moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
     specTrigger();
   }
-
   returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
 }
 
@@ -533,14 +532,4 @@ void returnMotor(int dir,int dirPin, int stepNumber, int dataPoints, int motorCh
   int newDir = !dir; // reverse direction of motor.
   moveMotor(newDir,dirPin,stepLength,motorChoice);
 }
-
-/*void closeLimitHit() {
-  systemOkay = false;
-  Serial.println("\n\n========Close Limit Hit!!!!!!!==========\n\n");
-}
-
-void farLimitHit() {
-  systemOkay = false;
-  Serial.println("\n\n========Far Limit Hit!!!!!!!==========\n\n");
-}*/
 
