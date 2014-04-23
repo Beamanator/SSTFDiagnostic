@@ -726,16 +726,19 @@ function[] = CrazyLaserGUI
             case handles.ExitProgram
                 %MF_DeleteFn; %this line may be unnecessary.
                 delete(Main_Figure);
+
             case handles.StartArduino
                 StartArduino();
                 if isfield(data.Hardware, 'Arduino')
                     set(handles.StartArduino, 'Checked', 'on');
                     set(handles.StartArduino, 'Enable', 'off');
                 end
+
             case handles.StartInductionSensor
                 % Must click 'Change Folder' on Loadup for this to work.
                 addpath([pwd '\Matlab']);
                 data.Hardware.Inductor = LDC1000_script();
+
             case handles.Test_menu
                 %disp('Test function.');               
                 %bob = data.Hardware.Inductor;
@@ -744,6 +747,7 @@ function[] = CrazyLaserGUI
                 %else
                 %    disp('nope');
                 %end
+
             case handles.Test2_menu                
                 %box = handles.Test2_menu;
 
@@ -761,25 +765,46 @@ function[] = CrazyLaserGUI
         % Maybe call UpdateDisplay if we want?
     end
 
+    %--- EditCallback is the same as menuCallback, but for editable text boxes!
     function EditCallback(srv,evnt)
         handles = data.handles;
+
+        % - NOT TESTED YET!!!
+        % - SHOULD WORK FOR EVERY BOX SINCE NOTHING NEEDS STRINGS!
+        % check to make sure values are NOT strings:
+        str = get(srv,'String');
+        if isempty(str2num(str))
+            set(srv,'String','0');
+            warndlg('Input must be numerical');
+        else
+            disp('Here maybe set data.Parameters value?');
+            disp('Depends on how well we can use srv variable!!');
+        end
         
         switch gcbo
             case handles.XSteps_etext
-                % check to make sure values are strings:
-                str = get(srv,'String');
-                if isempty(str2num(str))
-                    set(src,'String','0');
-                    warndlg('Input must be numerical');
-                end
+                disp('xSteps text box changed');
 
             case handles.ZSteps_etext
-                % check to make sure values are strings:
-                str = get(srv,'String');
-                if isempty(str2num(str))
-                    set(src,'String','0');
-                    warndlg('Input must be numerical');
-                end
+                disp('zSteps text box changed');
+
+            case handles.ZDirection_etext
+                disp('xDirection text box changed');
+
+            case handles.ZDirection_etext
+                disp('zDirection text box changed');
+
+            case handles.SpectraCount_etext
+                disp('xDataPoints / Spectra Count text box changed');
+
+            case handles.ScanCount_etext
+                disp('zScans / Scan Count text box changed');
+
+            case SpectrumDelayValue_etext
+                disp('Spectrum delay value text box changed');
+
+            case DriverDelayValue_etext
+                disp('Driver delay value text box changed');
                 
         end
     end
@@ -803,7 +828,21 @@ function[] = CrazyLaserGUI
                 xPoints = get(handles.SpectraCount_etext, 'String');
                 zScans = get(handles.ScanCount_etext, 'String');
 
-            case handles.Test_etext
+                sendArduinoVariables(['xStep' xStep]);
+                
+            case handles.GetPosition_button
+                disp('position button pressed.');
+                % Runs pre-written code. A modified version should probably be
+                % written for our stuff.
+                addpath([pwd '\Matlab']);
+                [Rp_vars, Tp_vars] = LDC1000_script();
+                
+                avgRp = mean(Rp_vars);
+                set(handles.CurrentPosition_stext,'string',num2str(avgRp) );
+                data.Parameters.Position = avgRp;
+                %disp(vars);
+
+            % case handles.Test_etext
                 % stepValue = get(handles.Test_etext,'string');
                 % if isempty(stepValue) %is something
                     % set(handles.Test_step, 'Enable', 'off');
@@ -816,21 +855,6 @@ function[] = CrazyLaserGUI
                 % end
                 
                 % disp(data.Parameters.stepValue);
-                
-            case handles.GetPosition_button
-                %data.Parameters.Position = data.Parameters.Position + 0.5;
-                %set(handles.Position_stext,'string',num2str(data.Parameters.Position));
-                disp('position button pressed.');
-                % Runs pre-written code. I should probably write a modified
-                % version for our stuff.
-                addpath([pwd '\Matlab']);
-                [Rp_vars, Tp_vars] = LDC1000_script();
-                
-                avgRp = mean(Rp_vars);
-                set(handles.Position_stext,'string',num2str(avgRp) );
-                data.Parameters.Position = avgRp;
-                %close(fig); %close figure data streams to.
-                %disp(vars);
         end
         % Maybe call UpdateDisplay if we want?
     end
@@ -872,6 +896,49 @@ function[] = CrazyLaserGUI
         end
 
         a = data.Hardware.Arduino;
+    end
+
+    %------ NOT TESTED YET:
+    %--- sendArduinoVariables is a function that sends variables to the Arduino.
+    %- uses roundTrip() function.
+    %- param array = what to send to Arduino.
+    %- array[0] = variable name,
+    %- array[1] = value of variable to send.
+    function sendArduinoVariables(array)
+        a = data.Hardware.Arduino;
+
+        name = array[0];
+        nameVar = 0;
+        value = array[1];
+
+        switch name
+            case 'xStep'
+                nameVar = 11;
+            case 'zStep'
+                nameVar = 12;
+            case 'xDirection'
+                nameVar = 13;
+            case 'zDirection'
+                nameVar = 14;
+            case 'xDataPoints'
+                nameVar = 15;
+            case 'zScans'
+                nameVar = 16;
+            case 'SpectrumDelay'
+                nameVar = 17;
+            case 'DriverDelay'
+                nameVar = 18;
+        end
+
+        % not exactly sure if this will work:
+        if (a == 0)
+            disp('Hmm, wrong code sent to sendArduinoVariables somewhere');
+        else
+            a.roundTrip(nameVar);
+            pause(0.1);
+            a.roundTrip(value);
+            pause(0.1);
+        end
     end
 
     %--- Moves Arduino a given direction and # of steps.
