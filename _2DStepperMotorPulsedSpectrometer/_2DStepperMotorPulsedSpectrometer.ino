@@ -58,8 +58,8 @@ int trigger = 13;       //This pin will be used to trigger the spectrometer.
 int xDirectVar = 0;    // 0 = left, 1 = right.
 int zDirectVar = 1;    // 1 = left, 0 = right.
 
-int xDataPoints = 0;   // Defaults to 2 for testing.
-int zScans = 0;        // Defaults to 2 for testing.
+int xDataPoints = 1;   // Defaults to 1 for testing.
+int zScans = 1;        // Defaults to 1 for testing.
 
 int DriverDelay = 10;
 int SpectrumDelay = 100;
