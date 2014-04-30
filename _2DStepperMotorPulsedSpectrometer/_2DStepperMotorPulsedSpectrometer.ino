@@ -321,7 +321,6 @@ void loop() {
                                 
       // boolean varReady begins FALSE.
       if (varReady) {
-        moveMotor(1, xDirectPin, 25, xMotor);
         setVal(val);
         varReady = false;
       } else {
