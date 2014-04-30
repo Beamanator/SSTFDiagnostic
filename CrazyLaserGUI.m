@@ -438,7 +438,7 @@ function[] = CrazyLaserGUI
             'position',[0.1 .6 .8 0.28]...
         );
     
-        SpectrumDelayText_stext = uicontrol(...
+        SpectrumDelay_stext = uicontrol(...
             'parent',Delays_panel,...
             'units','normalized',...
             'style','text',...
@@ -449,7 +449,7 @@ function[] = CrazyLaserGUI
             'HorizontalAlignment','left',...
             'position',[0.07 0.8 0.59 0.12]...
         );
-        DriverDelayText_stext = uicontrol(...
+        DriverDelay_stext = uicontrol(...
             'parent',Delays_panel,...
             'units','normalized',...
             'style','text',...
@@ -498,7 +498,7 @@ function[] = CrazyLaserGUI
             'parent',MotorParameters_panel,...
             'units','normalized',...
             'style','edit',...
-            'string','0',...
+            'string','1',...
             'fontsize',12,...
             'backgroundcolor','w',...
             'position',[0.7 .56 .2 0.06],...
@@ -567,7 +567,7 @@ function[] = CrazyLaserGUI
             'callback',@EditCallback...
         );
     
-        SpectrumDelayValue_etext = uicontrol(...
+        SpectrumDelay_etext = uicontrol(...
             'parent',Delays_panel,...
             'units','normalized',...
             'style','edit',...
@@ -577,7 +577,7 @@ function[] = CrazyLaserGUI
             'position',[0.73 0.8 0.2 0.12],...
             'callback',@EditCallback...
         );
-        DriverDelayValue_etext = uicontrol(...
+        DriverDelay_etext = uicontrol(...
             'parent',Delays_panel,...
             'units','normalized',...
             'style','edit',...
@@ -829,10 +829,10 @@ function[] = CrazyLaserGUI
         data.handles.ZDirPinValue_stext = ZDirPinValue_stext;
         data.handles.SpectrumType_stext = SpectrumType_stext;
         data.handles.LastScan_stext = LastScan_stext;
-        data.handles.SpectrumDelayText_stext = SpectrumDelayText_stext;
+        data.handles.SpectrumDelay_stext = SpectrumDelay_stext;
         data.handles.StartPositionText_stext = StartPositionText_stext;
         data.handles.StartPositionValue_stext = StartPositionValue_stext;
-        data.handles.DriverDelayText_stext = DriverDelayText_stext;
+        data.handles.DriverDelay_stext = DriverDelay_stext;
         data.handles.XSteps_stext = XSteps_stext;
         data.handles.ZSteps_stext = ZSteps_stext;
         data.handles.XDirection_stext = XDirection_stext;
@@ -854,8 +854,8 @@ function[] = CrazyLaserGUI
         data.handles.ZDirection_etext = ZDirection_etext;
         data.handles.xSpectraCount_etext = xSpectraCount_etext;
         data.handles.zScanCount_etext = zScanCount_etext;
-        data.handles.SpectrumDelayValue_etext = SpectrumDelayValue_etext;
-        data.handles.DriverDelayValue_etext = DriverDelayValue_etext;
+        data.handles.SpectrumDelay_etext = SpectrumDelay_etext;
+        data.handles.DriverDelay_etext = DriverDelay_etext;
         
         data.handles.XJogSteps_etext = XJogSteps_etext;
         data.handles.XJogSteps_etext = ZJogSteps_etext;
@@ -960,6 +960,7 @@ function[] = CrazyLaserGUI
                 set(srv,'String',val);
             end
             warndlg('Input must be numerical');
+            return % quit function early.
         else
             set(srv,'UserData',str);
             %disp('Here maybe set data.Parameters value?');
@@ -968,29 +969,45 @@ function[] = CrazyLaserGUI
         
         switch gcbo
             case handles.XSteps_etext
-                disp('xSteps text box changed');
+                disp(['xSteps text box changed to ',get(srv,'String')]);
 
             case handles.ZSteps_etext
-                disp('zSteps text box changed');
+                disp(['zSteps text box changed to ',get(srv,'String')]);
+
+            case handles.XDirection_etext
+                disp(['xDirection text box changed to ',get(srv,'String')]);
+                warndlg('1 = forward, 0 = backward');
 
             case handles.ZDirection_etext
-                disp('xDirection text box changed');
-
-            case handles.ZDirection_etext
-                disp('zDirection text box changed');
+                disp(['zDirection text box changed to ',get(srv,'String')]);
+                warndlg('0 = forward, 1 = backward');
 
             case handles.xSpectraCount_etext
-                disp('xDataPoints / Spectra Count text box changed');
+                disp(['xDataPoints / Spectra Count text box changed to ',get(srv,'String')]);
 
             case handles.zScanCount_etext
-                disp('zScans / Scan Count text box changed');
+                disp(['zScans / Scan Count text box changed to ',get(srv,'String')]);
 
-            case handles.SpectrumDelayValue_etext
-                disp('Spectrum delay value text box changed');
+            case handles.SpectrumDelay_etext
+                disp(['Spectrum delay value text box changed to ',get(srv,'String')]);
 
-            case handles.DriverDelayValue_etext
-                disp('Driver delay value text box changed');
+            case handles.DriverDelay_etext
+                disp(['Driver delay value text box changed to ',get(srv,'String')]);
                 
+            case handles.XJogSteps_etext
+                disp(['X jog steps text box changed to ',get(srv,'String')]);
+                
+            case handles.ZJogSteps_etext
+                disp(['Z jog steps text box changed to ',get(srv,'String')]);
+                
+            case handles.XJogDirection_etext
+                disp(['X jog direction value text box changed to ',get(srv,'String')]);
+                warndlg('1 = forward, 0 = backward');
+
+            case handles.ZJogDirection_etext
+                disp(['Z jog direction value text box changed to ',get(srv,'String')]);
+                warndlg('0 = forward, 1 = backward');
+
         end
         
         UpdateDisplay();
@@ -1021,15 +1038,70 @@ function[] = CrazyLaserGUI
 
             case handles.MotorParametersSave_button
                 % Not tested yet:
-                p = data.Parameters;
-                p.xStep = str2double(get(handles.XSteps_etext, 'String'));
-                p.zStep = str2double(get(handles.ZSteps_etext, 'String'));
-                p.xDirection = str2double(get(handles.XDirection_etext, 'String'));
-                p.zDirection = str2double(get(handles.ZDirection_etext, 'String'));
-                p.xPoints = str2double(get(handles.SpectraCount_etext, 'String'));
-                p.zScans = str2double(get(handles.ScanCount_etext, 'String'));
+                xSteps = str2double(get(handles.XSteps_etext, 'String'));
+                zSteps = str2double(get(handles.ZSteps_etext, 'String'));
+                xDirection = str2double(get(handles.XDirection_etext, 'String'));
+                zDirection = str2double(get(handles.ZDirection_etext, 'String'));
+                xPoints = str2double(get(handles.xSpectraCount_etext, 'String'));
+                zScans = str2double(get(handles.zScanCount_etext, 'String'));
+                
+                sendArduinoVariables('xSteps',xSteps);
+                sendArduinoVariables('zSteps',zSteps);
+                sendArduinoVariables('xDirection',xDirection);
+                sendArduinoVariables('zDirection',zDirection);
+                sendArduinoVariables('xDataPoints',xPoints);
+                sendArduinoVariables('zScans',zScans);
+                
+            case handles.DelaysSave_button
+                SpectrumDelay = str2double(get(handles.SpectrumDelay_etext,'String'));
+                DriverDelay = str2double(get(handles.DriverDelay_etext,'String'));
+                
+                sendArduinoVariables('SpectrumDelay',SpectrumDelay);
+                sendArduinoVariables('DriverDelay',DriverDelay);
+                
+            case handles.FullScan_button
+                disp('Starting Full Scan');
+                xSteps = get(handles.XSteps_etext, 'String');
+                zSteps = get(handles.ZSteps_etext, 'String');
+                xDirection = get(handles.XDirection_etext, 'String');
+                zDirection = get(handles.ZDirection_etext, 'String');
+                xPoints = get(handles.xSpectraCount_etext, 'String');
+                zScans = get(handles.zScanCount_etext, 'String');
+                
+                % display params to console just for another reference.
+                disp(['x steps: ' xSteps]);
+                disp(['z steps: ' zSteps]);
+                disp(['x direction: ' xDirection]);
+                disp(['z direction: ' zDirection]);
+                disp(['# x data points: ' xPoints]);
+                disp(['# z Scans: ' zScans]);
+                
+                data.Hardware.Arduino.roundTrip(21);
+                
+            case handles.XScan_button
+                disp('Starting X Scan');
+                xSteps = get(handles.XSteps_etext, 'String');
+                xDirection = get(handles.XDirection_etext, 'String');
+                xPoints = get(handles.xSpectraCount_etext, 'String');
 
-                sendArduinoVariables(['xStep' xStep]);
+                disp(['x steps: ' xSteps]);
+                disp(['x direction: ' xDirection]);
+                disp(['# x data points: ' xPoints]);
+                
+                data.Hardware.Arduino.roundTrip(23);
+                
+            case handles.ZScan_button
+                disp('Starting Full Scan');
+                zSteps = get(handles.ZSteps_etext, 'String');
+                zDirection = get(handles.ZDirection_etext, 'String');
+                zScans = get(handles.zScanCount_etext, 'String');
+                
+                % display params to console just for another reference.
+                disp(['z steps: ' zSteps]);
+                disp(['z direction: ' zDirection]);
+                disp(['# z Scans: ' zScans]);
+                
+                data.Hardware.Arduino.roundTrip(24);
                 
             case handles.GetPosition_button
                 disp('position button pressed.');
@@ -1109,6 +1181,8 @@ function[] = CrazyLaserGUI
             set(handles.MotorParametersSave_button, 'Enable', 'on');
             set(handles.TakeSpectrum_button, 'Enable', 'on');
             set(handles.DelaysSave_button, 'Enable', 'on');
+            %set(handles.GetPosition_button, 'Enable','on');
+            set(handles.Jog_button,'Enable','on');
         end
 
         %TODO: either get rid of this line or use variable 'a' in rest of program.
@@ -1121,39 +1195,36 @@ function[] = CrazyLaserGUI
     %- param array = what to send to Arduino.
     %- array[0] = variable name,
     %- array[1] = value of variable to send.
-    function sendArduinoVariables(array)
+    function sendArduinoVariables(varName, val)
         a = data.Hardware.Arduino;
+        varCode = 0;
 
-        name = array(1);
-        nameVar = 0;
-        value = array(2);
-
-        switch name
-            case 'xStep'
-                nameVar = 11;
-            case 'zStep'
-                nameVar = 12;
+        switch varName
+            case 'xSteps'
+                varCode = 11;
             case 'xDirection'
-                nameVar = 13;
-            case 'zDirection'
-                nameVar = 14;
+                varCode = 12;
             case 'xDataPoints'
-                nameVar = 15;
+                varCode = 13;
+            case 'zSteps'
+                varCode = 14;
+            case 'zDirection'
+                varCode = 15;
             case 'zScans'
-                nameVar = 16;
+                varCode = 16;
             case 'SpectrumDelay'
-                nameVar = 17;
+                varCode = 17;
             case 'DriverDelay'
-                nameVar = 18;
+                varCode = 18;
         end
 
         % not exactly sure if this will work:
         if (a == 0)
             disp('Hmm, wrong code sent to sendArduinoVariables somewhere');
         else
-            a.roundTrip(nameVar);
+            a.roundTrip(varCode);
             pause(0.1);
-            a.roundTrip(value);
+            a.roundTrip(val);
             pause(0.1);
         end
     end
