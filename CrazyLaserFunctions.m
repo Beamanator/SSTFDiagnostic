@@ -8,15 +8,7 @@ function[fn] = CrazyLaserGUI(data)
     fn.CheckboxCallback = @CheckboxCallback;
     fn.ButtonCallback = @ButtonCallback;
     fn.MF_DeleteFn = @MF_DeleteFn;
-    
-    % Create all GUI components and initialize handles structure to pass to
-    % all other functions in FrogScanGUI
-    %function OpeningFn
-    %    'BuildGUI';
-    %    
-    %    %UpdateDisplay();
-    %    
-    %end
+    fn.UpdateDisplay = @UpdateDisplay;
 
     %-----------------------------------------------------------------%
     %%%                   Callbacks      (Main_Figure)              %%%
@@ -33,7 +25,6 @@ function[fn] = CrazyLaserGUI(data)
         % switch on object whos callback is being executed (gcbo)
         switch gcbo
             case handles.ExitProgram
-                %MF_DeleteFn; %this line may be unnecessary.
                 delete(data.Main_Figure);
 
             case handles.StartArduino
@@ -47,29 +38,6 @@ function[fn] = CrazyLaserGUI(data)
                 % Must click 'Change Folder' on Loadup for this to work.
                 addpath([pwd '\Matlab']);
                 data.Hardware.Inductor = LDC1000_script();
-
-            case handles.Test_menu
-                %disp('Test function.');               
-                %bob = data.Hardware.Inductor;
-                %if exist('bob', 'var')
-                %    disp('available');
-                %else
-                %    disp('nope');
-                %end
-
-            case handles.Test2_menu                
-                %box = handles.Test2_menu;
-
-                %checked = get(box, 'Checked');
-                %if strcmp(checked,'off');
-                %    set(box, 'Checked', 'on');
-                %else
-                %    set(box, 'Checked', 'off');
-                %end
-                disp('Testing roundTrip(42)');
-                if isfield(data.Hardware, 'Arduino')
-                    data.Hardware.Arduino.roundTrip(42);
-                end
         end
         % Maybe call UpdateDisplay if we want?
     end
@@ -173,10 +141,23 @@ function[fn] = CrazyLaserGUI(data)
                 
                 xSteps = str2double(get(handles.XSteps_etext, 'String'));
                 zSteps = str2double(get(handles.ZSteps_etext, 'String'));
-                xDirection = str2double(get(handles.XDirection_etext, 'String'));
-                zDirection = str2double(get(handles.ZDirection_etext, 'String'));
                 xPoints = str2double(get(handles.xSpectraCount_etext, 'String'));
                 zScans = str2double(get(handles.zScanCount_etext, 'String'));
+                
+                % TODO: test these direction handles:
+                % - need to calibrate what is forward (1 or 0)
+                % - [depends on orientation of setup]
+                xDir = handles.XScanUp_button;
+                xDirection = 0;
+                if get(xDir,'Value') == get(xDir,'Max') %down
+                    xDirection = 1;
+                end
+                
+                zDir = handles.ZScanLeft_button;
+                zDirection = 0;
+                if get(zDir,'Value') == get(zDir,'Max') %down
+                    zDirection = 1;
+                end
                 
                 sendArduinoVariables('xSteps',xSteps);
                 sendArduinoVariables('zSteps',zSteps);
@@ -236,6 +217,50 @@ function[fn] = CrazyLaserGUI(data)
                 
                 data.Hardware.Arduino.roundTrip(24);
                 
+            case handles.XScanUp_button
+                State = get(srv, 'Value');
+                xDown = handles.XScanDown_button;
+                if State == get(srv,'Max'); % down
+                    min = get(xDown,'Min');
+                    set(xDown,'Value',min);
+                else % up
+                    max = get(xDown,'Max');
+                    set(xDown,'Value',max);
+                end
+                
+            case handles.XScanDown_button
+                State = get(srv,'Value');
+                xUp = handles.XScanUp_button;
+                if State == get(srv,'Max'); % down
+                    min = get(xUp,'Min');
+                    set(xUp,'Value',min);
+                else % up
+                    max = get(xUp,'Max');
+                    set(xUp,'Value',max);
+                end
+                
+            case handles.ZScanRight_button
+                State = get(srv,'Value');
+                zLeft = handles.ZScanLeft_button;
+                if State == get(srv,'Max'); % down
+                    min = get(zLeft,'Min');
+                    set(zLeft,'Value',min);
+                else % up
+                    max = get(zLeft,'Max');
+                    set(zLeft,'Value',max);
+                end
+                
+            case handles.ZScanLeft_button
+                State = get(srv,'Value');
+                zRight = handles.ZScanRight_button;
+                if State == get(srv,'Max'); % down
+                    min = get(zRight,'Min');
+                    set(zRight,'Value',min);
+                else % up
+                    max = get(zRight,'Max');
+                    set(zRight,'Value',max);
+                end
+                
             case handles.GetPosition_button
                 disp('position button pressed.');
                 % Runs pre-written code. A modified version should probably be
@@ -250,52 +275,23 @@ function[fn] = CrazyLaserGUI(data)
 
                 data.Parameters.RpPosition = avgRp;
                 data.Parameters.TpPosition = avgTp;
-                %disp(vars);
-
-            % case handles.Test_etext
-                % stepValue = get(handles.Test_etext,'string');
-                % if isempty(stepValue) %is something
-                    % set(handles.Test_step, 'Enable', 'off');
-                    % data.Parameters.stepValue = 0.0;
-                % elseif not(isnan(str2double(stepValue)))
-                    % set(handles.Test_step, 'Enable', 'on');
-                    % data.Parameters.stepValue = str2double(stepValue);
-                % elseif isnan(str2double(stepValue))
-                    % disp(stepValue);
-                % end
                 
-                % disp(data.Parameters.stepValue);
         end
         % Maybe call UpdateDisplay if we want?
     end
 
-    %--- src and evnt are two variables automatically passed into this
-    %- delete function.
-    %- src is a double - on windows it seems to be 18.003 and counting...
-    %- evnt seems to be an empty variable.
-    %--- in any case, src and evnt need to be accepted, no need to use 'em.
+    %--- MF_DeleteFn is called when the GUI is closed using the X.
     function MF_DeleteFn(src,evnt)
-        %- This works, but we'll try the other way.
-        %if strcmp(get(data.handles.TestMove_button, 'Enable'),'on')%TestMove_button not available anymore.
-        %    delete(data.Hardware.Arduino);
-        %    disp('Arduino disconnected');
-        %elseif strcmp(get(data.handles.TestMove_button, 'Enable'),'off')
-        %    disp('arduino already off');
-        %end
-        %- New way:     
-        
         if exist('data.Hardware.Arduino', 'var')
             delete(data.Hardware.Arduino);
         else
             disp('Arduino already off');
         end
-        disp('Here we will kill all other events - spectrometer, etc.!');
     end
 
     %--- Initialize Arduino.
     %- connect to correct COM port,
     %- create Arduino variable, set correct pins to correct values.
-    %- [Only called ONCE - when starting CrazyLaserGUI]
     function StartArduino()
         if exist('data.Hardware.Arduino','var') && isa(data.Hardware.Arduino,'arduino') && isvalid(data.Hardware.Arduino),
             % already connected, so nothing to do here.
@@ -314,20 +310,15 @@ function[fn] = CrazyLaserGUI(data)
             set(handles.MotorParametersSave_button, 'Enable', 'on');
             set(handles.TakeSpectrum_button, 'Enable', 'on');
             set(handles.DelaysSave_button, 'Enable', 'on');
-            %set(handles.GetPosition_button, 'Enable','on');
             set(handles.Jog_button,'Enable','on');
         end
-
-        %TODO: either get rid of this line or use variable 'a' in rest of program.
-        a = data.Hardware.Arduino;
     end
 
-    %------ NOT TESTED YET:
     %--- sendArduinoVariables is a function that sends variables to the Arduino.
     %- uses roundTrip() function.
-    %- param array = what to send to Arduino.
-    %- array[0] = variable name,
-    %- array[1] = value of variable to send.
+    %- params:
+    %-  varName = name of variable to set in Arduino code
+    %-  val = value to set to specified variable in Arduino code.
     function sendArduinoVariables(varName, val)
         a = data.Hardware.Arduino;
         varCode = 0;
@@ -351,7 +342,7 @@ function[fn] = CrazyLaserGUI(data)
                 varCode = 18;
         end
 
-        % not exactly sure if this will work:
+        % not exactly what this does, but it works:
         if (a == 0)
             disp('Hmm, wrong code sent to sendArduinoVariables somewhere');
         else
@@ -391,7 +382,7 @@ function[fn] = CrazyLaserGUI(data)
         %--- Update # of triggers needed for spectrometer:
         xPoints = str2double(get(h.xSpectraCount_etext, 'String'));
         zScans = str2double(get(h.zScanCount_etext, 'String'));
-        
+
         total = zScans * xPoints;
         set(h.TotalMeasurementsValue_stext, 'string', num2str(total));
     end
