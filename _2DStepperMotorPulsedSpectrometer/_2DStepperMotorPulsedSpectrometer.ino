@@ -382,6 +382,15 @@ void loop() {
             case 42:
               moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
               break;
+            case 43:
+              returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
+              break;
+            case 44:
+              moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+              break;
+            case 45:
+              returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor);
+              break;
             default:
               break;
           }
@@ -444,18 +453,22 @@ void setVal(byte val) {
   EXECUTE CODE
    
   This function sets up the 2D scan & spectrometer triggering.
+  
+  Starts taking data exactly where stage starts.
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void ExecuteMeasurement() {
   for (int i = zScans; i > 0; i--) {
     for (int j = xDataPoints; j > 0; j--) {
-      moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+      if (j != xDataPoints) {
+        moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+      }
       specTrigger();
     }
-    
     returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
-    moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+    if (i > 1) {
+      moveMotor(zDirectVar,zDirectPin,zSteps,zMotor);
+    }
   }
-  
   returnMotor(zDirectVar,zDirectPin,zSteps,zScans,zMotor);
 }
 
@@ -527,8 +540,13 @@ void specTrigger() {
  Returns the motor the the previous position before measurements were taken.
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void returnMotor(int dir,int dirPin, int stepNumber, int dataPoints, int motorChoice) {
-  int stepLength = stepNumber * dataPoints;
+  int stepLength;
   int newDir = !dir; // reverse direction of motor.
-  moveMotor(newDir,dirPin,stepLength,motorChoice);
+  int groups = dataPoints - 1;
+  
+  if (dataPoints > 1) {
+    stepLength = stepNumber * groups;
+    moveMotor(newDir,dirPin,stepLength,motorChoice);
+  }
 }
 
