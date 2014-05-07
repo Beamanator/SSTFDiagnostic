@@ -49,7 +49,6 @@ KEY_IS_PRESSED = 0;
 %ylabel('Tp')
 
 %set(h1, 'KeyPressFcn', @Local_KeyPressFcn)
-disp(N);
 if(N<2048)
     N=2048; % = 2 ^ 11
 end
