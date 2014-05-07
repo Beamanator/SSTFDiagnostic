@@ -1,4 +1,4 @@
-function[fn] = CrazyLaserGUI(data)
+function[fn] = CrazyLaserFunctions(data)
     %-----------------------------------------------------------------%
     %%%                          Functions       (Main_Figure)      %%%
     %-----------------------------------------------------------------%
@@ -37,9 +37,9 @@ function[fn] = CrazyLaserGUI(data)
             case handles.StartInductionSensor
                 % Must click 'Change Folder' on Loadup for this to work.
                 addpath([pwd '\Matlab']);
-                data.Hardware.Inductor = LDC1000_script();
+                
+                set(handles.GetPosition_button,'Enable','on');
         end
-        % Maybe call UpdateDisplay if we want?
     end
 
     %--- EditCallback is the same as menuCallback, but for editable text boxes!
@@ -60,7 +60,9 @@ function[fn] = CrazyLaserGUI(data)
             return % quit function early.
         else
             set(srv,'UserData',str);
-            if exist('data.Hardware.Arduino','var') && isa(data.Hardware.Arduino,'arduino') && isvalid(data.Hardware.Arduino),
+            
+            arduino = instrfind({'Port'},{'COM4'});
+            if (strcmp(get(arduino,'Status'), 'open'))
                 set(handles.MotorParametersSave_button,'Enable','on');
             end
             %disp('Here maybe set data.Parameters value?');
@@ -73,14 +75,6 @@ function[fn] = CrazyLaserGUI(data)
 
             case handles.ZSteps_etext
                 disp(['zSteps text box changed to ',get(srv,'String')]);
-
-            case handles.XDirection_etext
-                disp(['xDirection text box changed to ',get(srv,'String')]);
-                warndlg('1 = forward, 0 = backward');
-
-            case handles.ZDirection_etext
-                disp(['zDirection text box changed to ',get(srv,'String')]);
-                warndlg('0 = forward, 1 = backward');
 
             case handles.xSpectraCount_etext
                 disp(['xDataPoints / Spectra Count text box changed to ',get(srv,'String')]);
@@ -132,9 +126,7 @@ function[fn] = CrazyLaserGUI(data)
         
         switch gcbo
             case handles.TakeSpectrum_button
-                
-                a = data.Hardware.Arduino;
-                a.roundTrip(22);
+                TakeSpectrum();
 
             case handles.MotorParametersSave_button
                 set(srv,'Enable','off');
@@ -153,7 +145,7 @@ function[fn] = CrazyLaserGUI(data)
                     xDirection = 1;
                 end
                 
-                zDir = handles.ZScanLeft_button;
+                zDir = handles.ZScanRight_button;
                 zDirection = 0;
                 if get(zDir,'Value') == get(zDir,'Max') %down
                     zDirection = 1;
@@ -174,48 +166,13 @@ function[fn] = CrazyLaserGUI(data)
                 sendArduinoVariables('DriverDelay',DriverDelay);
                 
             case handles.FullScan_button
-                disp('Starting Full Scan');
-                xSteps = get(handles.XSteps_etext, 'String');
-                zSteps = get(handles.ZSteps_etext, 'String');
-                xDirection = get(handles.XDirection_etext, 'String');
-                zDirection = get(handles.ZDirection_etext, 'String');
-                xPoints = get(handles.xSpectraCount_etext, 'String');
-                zScans = get(handles.zScanCount_etext, 'String');
-                
-                % display params to console just for another reference.
-                disp(['x steps: ' xSteps]);
-                disp(['z steps: ' zSteps]);
-                disp(['x direction: ' xDirection]);
-                disp(['z direction: ' zDirection]);
-                disp(['# x data points: ' xPoints]);
-                disp(['# z Scans: ' zScans]);
-                
-                data.Hardware.Arduino.roundTrip(21);
+                RunFullScan();
                 
             case handles.XScan_button
-                disp('Starting X Scan');
-                xSteps = get(handles.XSteps_etext, 'String');
-                xDirection = get(handles.XDirection_etext, 'String');
-                xPoints = get(handles.xSpectraCount_etext, 'String');
-
-                disp(['x steps: ' xSteps]);
-                disp(['x direction: ' xDirection]);
-                disp(['# x data points: ' xPoints]);
-                
-                data.Hardware.Arduino.roundTrip(23);
+                RunXScan();
                 
             case handles.ZScan_button
-                disp('Starting Full Scan');
-                zSteps = get(handles.ZSteps_etext, 'String');
-                zDirection = get(handles.ZDirection_etext, 'String');
-                zScans = get(handles.zScanCount_etext, 'String');
-                
-                % display params to console just for another reference.
-                disp(['z steps: ' zSteps]);
-                disp(['z direction: ' zDirection]);
-                disp(['# z Scans: ' zScans]);
-                
-                data.Hardware.Arduino.roundTrip(24);
+                RunZScan();
                 
             case handles.XScanUp_button
                 State = get(srv, 'Value');
@@ -262,28 +219,34 @@ function[fn] = CrazyLaserGUI(data)
                 end
                 
             case handles.GetPosition_button
-                disp('position button pressed.');
-                % Runs pre-written code. A modified version should probably be
-                % written for our stuff.
-                addpath([pwd '\Matlab']);
                 [Rp_vars, Tp_vars] = LDC1000_script();
                 
                 avgRp = mean(Rp_vars);
                 avgTp = mean(Tp_vars);
 
                 set(handles.CurrentPosition_stext,'string',num2str(avgRp) );
-
-                data.Parameters.RpPosition = avgRp;
-                data.Parameters.TpPosition = avgTp;
                 
+            case handles.RepeatScan_button
+                prevScan = get(handles.LastScan_stext,'String');
+                
+                switch prevScan
+                    case 'Full'
+                        RunFullScan();
+                    case '- X -'
+                        RunXScan();
+                    case '- Z -'
+                        RunZScan();
+                end
         end
         % Maybe call UpdateDisplay if we want?
     end
 
     %--- MF_DeleteFn is called when the GUI is closed using the X.
     function MF_DeleteFn(src,evnt)
-        if exist('data.Hardware.Arduino', 'var')
-            delete(data.Hardware.Arduino);
+        arduino = instrfind({'Port'},{'COM4'});
+        
+        if (strcmp(get(arduino,'Status'), 'open'))
+            delete(arduino);
         else
             disp('Arduino already off');
         end
@@ -307,7 +270,6 @@ function[fn] = CrazyLaserGUI(data)
             set(handles.ZScan_button, 'Enable', 'on');
             set(handles.FullScan_button, 'Enable', 'on');
             set(handles.RepeatScan_button, 'Enable', 'on');
-            set(handles.MotorParametersSave_button, 'Enable', 'on');
             set(handles.TakeSpectrum_button, 'Enable', 'on');
             set(handles.DelaysSave_button, 'Enable', 'on');
             set(handles.Jog_button,'Enable','on');
@@ -320,7 +282,9 @@ function[fn] = CrazyLaserGUI(data)
     %-  varName = name of variable to set in Arduino code
     %-  val = value to set to specified variable in Arduino code.
     function sendArduinoVariables(varName, val)
+        port = instrfind({'Port'},{'COM4'});
         a = data.Hardware.Arduino;
+        
         varCode = 0;
 
         switch varName
@@ -343,37 +307,268 @@ function[fn] = CrazyLaserGUI(data)
         end
 
         % not exactly what this does, but it works:
-        if (a == 0)
-            disp('Hmm, wrong code sent to sendArduinoVariables somewhere');
+        if (strcmp(get(port,'Status'),'open'))
+            if (val > 250)
+                switch varCode
+                    case 11
+                        if (val > 250)
+                            a.roundTrip(11);
+                            pause(0.1);
+                            a.roundTrip(0);
+                            pause(0.1);
+
+                            rem = val;
+                            while (rem > 250)
+                                a.roundTrip(25);
+                                pause(0.1);
+                                a.roundTrip(250);
+                                pause(0.1);
+
+                                rem = rem - 250;
+                            end
+
+                            a.roundTrip(25);
+                            pause(0.2);
+                            a.roundTrip(rem);
+                            pause(0.1);
+                        else
+                            a.roundTrip(varCode);
+                            pause(0.1);
+                            a.roundTrip(val);
+                            pause(0.1);
+                        end
+                    
+                    case 14
+                        if (val > 250)
+                            a.roundTrip(11);
+                            pause(0.1);
+                            a.roundTrip(0);
+                            pause(0.1);
+
+                            rem = val;
+                            while (rem > 250)
+                                a.roundTrip(26);
+                                pause(0.1);
+                                a.roundTrip(250);
+                                pause(0.1);
+
+                                rem = rem - 250;
+                            end
+
+                            a.roundTrip(26);
+                            pause(0.2);
+                            a.roundTrip(rem);
+                            pause(0.1);
+                        else
+                            a.roundTrip(varCode);
+                            pause(0.1);
+                            a.roundTrip(val);
+                            pause(0.1);
+                        end
+                        
+                    otherwise
+                        disp('Why such a large number?????');
+                end
+            else
+                a.roundTrip(varCode);
+                pause(0.1);
+                a.roundTrip(val);
+                pause(0.1);
+            end
         else
-            a.roundTrip(varCode);
-            pause(0.1);
-            a.roundTrip(val);
-            pause(0.1);
+            disp('Hmm, wrong code sent to sendArduinoVariables somewhere');
         end
     end
 
-    %--- Moves Arduino a given direction and # of steps.
-    %- if dir is 'F', will move stage AWAY from motor [forward]
-    %- if dir is 'B', will move stage TOWARDS motor [backward]
-    % function Move(dir, steps)
-    %     a = data.Hardware.Arduino;
-    %     switch dir
-    %         case 'F'
-    %             disp('Forward')
-    %             a.digitalWrite(2, 1);
-    %         case 'B'
-    %             disp('Backward')
-    %             a.digitalWrite(2, 0);
-    %     end
-    %     disp(steps);
-    %     for m = 1:steps
-    %         a.digitalWrite(3, 1);
-    %         pause(0.001); % - should be ~ 1 millisecond pause but ISN'T
-    %         a.digitalWrite(3, 0);
-    %         pause(0.001);
-    %     end
-    % end
+    %--- TakeSpectrum function gives Arduino command to take a spectrum.
+    function TakeSpectrum
+        A_Port = instrfind({'Port'},{'COM4'}); % Arduino
+        
+        if (strcmp(get(A_Port,'Status'),'open'))
+            a = data.Hardware.Arduino;
+            a.roundTrip(22);
+        end
+    end
+    
+    %--- V2 because this version will use the induction sensor eventually.
+    function RunFullScan
+        a = data.Hardware.Arduino;
+        handles = data.handles;
+        
+        set(handles.LastScan_stext,'String','Full');
+                
+        xSteps = get(handles.XSteps_etext, 'String');
+        zSteps = get(handles.ZSteps_etext, 'String');
+        xPoints = get(handles.xSpectraCount_etext, 'String');
+        zScans = get(handles.zScanCount_etext, 'String');
+
+        xDir = handles.XScanUp_button;
+        xDirection = 0;
+        if get(xDir,'Value') == get(xDir,'Max') % = clicked
+            xDirection = 1; % 1 = up
+        end
+
+        zDir = handles.ZScanRight_button;
+        zDirection = 0;
+        if get(zDir,'Value') == get(zDir,'Max') % = clicked
+            zDirection = 1; % 1 = right
+        end
+
+        % display params to console just for another reference.
+        disp(['x steps: ' xSteps]);
+        disp(['z steps: ' zSteps]);
+        disp(['x direction: ' xDirection]);
+        disp(['z direction: ' zDirection]);
+        disp(['# x data points: ' xPoints]);
+        disp(['# z Scans: ' zScans]);
+        
+        disp('Starting Full Scan');
+        xPoints = str2double(get(handles.xSpectraCount_etext, 'String'));
+        zScans = str2double(get(handles.zScanCount_etext, 'String'));
+        
+        % create position matrix:
+        Position = zeros(zScans,xPoints);
+        
+        %-- actual scan
+        for i = 1:zScans
+            for j = 1:xPoints
+                if (j ~= 1)
+                    % move x motor:
+                    a.roundTrip(42);
+                    pause(0.1);
+                end
+                TakeSpectrum();
+                %disp('Take position measurement - GetPosition()');
+                [Rp_vars, Tp_vars] = LDC1000_script();
+                
+                avgRp = mean(Rp_vars);
+                avgTp = mean(Tp_vars);
+                
+                Position(i,j) = avgRp;
+                
+                pause(0.1);
+            end
+            % Return x motor:
+            a.roundTrip(43);
+            pause(0.1);
+            % Move z motor:
+            if (i < zScans)
+                a.roundTrip(44);
+                pause(0.1);
+            end
+        end
+        % Return z motor:
+        a.roundTrip(45); % z return
+        pause(0.1);
+            
+        disp('Full scan done.  Position matrix:');
+        disp(Position);
+    end
+
+    %--- Function RunXScan only runs the motor in the x axis, no matter
+    %- the z values.
+    function RunXScan
+        handles = data.handles;
+        a = data.Hardware.Arduino;
+        
+        set(handles.LastScan_stext,'String','- X -');
+                
+        xSteps = get(handles.XSteps_etext, 'String');
+        xPoints = get(handles.xSpectraCount_etext, 'String');
+
+        xDir = handles.XScanUp_button;
+        xDirection = 0;
+        if get(xDir,'Value') == get(xDir,'Max') % = clicked
+            xDirection = 1; % 1 = up
+        end
+
+        disp(['x steps: ' xSteps]);
+        disp(['x direction: ' xDirection]);
+        disp(['# x data points: ' xPoints]);
+        
+        disp('Starting X Scan');
+        
+        xPoints = str2double(get(handles.xSpectraCount_etext, 'String'));
+        
+        % create position vector:
+        Position = [];
+        
+        for j = 1:xPoints
+            if (j ~= 1)
+                % move x motor:
+                a.roundTrip(42);
+                pause(0.1);
+            end
+            TakeSpectrum();
+            %disp('Take position measurement - GetPosition()');
+            [Rp_vars, Tp_vars] = LDC1000_script();
+
+            avgRp = mean(Rp_vars);
+            avgTp = mean(Tp_vars);
+            
+            Position = [Position avgRp];
+
+            pause(0.1);
+        end
+        % Return x motor:
+        a.roundTrip(43);
+        pause(0.1);
+        
+        disp('X scan done.  Position vector:');
+        disp(Position);
+    end
+
+    %--- Function RunZScan only runs the motor in the z axis, no matter
+    %- the x values.
+    function RunZScan
+        handles = data.handles;
+        a = data.Hardware.Arduino;
+        
+        set(handles.LastScan_stext,'String','- Z -');
+        
+        zSteps = get(handles.ZSteps_etext, 'String');
+        zScans = get(handles.zScanCount_etext, 'String');
+
+        zDir = handles.ZScanRight_button;
+        zDirection = 0;
+        if get(zDir,'Value') == get(zDir,'Max') % = clicked
+            zDirection = 1; % 1 = right
+        end
+
+        % display params to console just for another reference.
+        disp(['z steps: ' zSteps]);
+        disp(['z direction: ' zDirection]);
+        disp(['# z Scans: ' zScans]);
+        
+        disp('Starting Z Scan');
+        zScans = str2double(get(handles.zScanCount_etext, 'String'));
+        
+        % create position matrix:
+        Position = [];
+        
+        for i = 1:zScans
+            % Move z motor:
+            if (i < zScans)
+                a.roundTrip(44);
+                pause(0.1);
+            end
+            TakeSpectrum();
+            [Rp_vars, Tp_vars] = LDC1000_script();
+
+            avgRp = mean(Rp_vars);
+            avgTp = mean(Tp_vars);
+            
+            Position = [Position avgRp];
+
+            pause(0.1);
+        end
+        % Return z motor:
+        a.roundTrip(45); % z return
+        pause(0.1);
+            
+        disp('Z scan done.  Position vector:');
+        disp(Position);
+    end
 
     %--- Updates the display to conform with private parameter values.
     function UpdateDisplay()
@@ -385,5 +580,20 @@ function[fn] = CrazyLaserGUI(data)
 
         total = zScans * xPoints;
         set(h.TotalMeasurementsValue_stext, 'string', num2str(total));
+        
+        %--- If # scans or # data points is set to 1, disable that etext
+        %- box!
+        if (xPoints == 1)
+            set(h.XSteps_etext,'Enable','off');
+        else
+            set(h.XSteps_etext,'Enable','on');
+        end
+        
+        if (zScans == 1)
+            set(h.ZSteps_etext,'Enable','off');
+        else
+            set(h.ZSteps_etext,'Enable','on');
+        end
+        
     end
 end
