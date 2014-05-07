@@ -1,4 +1,4 @@
-function [] = BuildGUI
+function [] = CrazyLaserGUI
 %BuildGUI creates all GUI components for CrazyLaserGUI
 % Create all GUI components and initialize handles structure to pass to
 %  all other functions in CrazyLaserGUI
