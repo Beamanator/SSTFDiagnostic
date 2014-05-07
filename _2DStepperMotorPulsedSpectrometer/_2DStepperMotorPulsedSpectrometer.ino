@@ -488,7 +488,9 @@ void RunZMeasurement() {
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 void RunXMeasurement() {
   for (int j = xDataPoints; j > 0; j--) {
-    moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+    if (j != xDataPoints) {
+      moveMotor(xDirectVar,xDirectPin,xSteps,xMotor);
+    }
     specTrigger();
   }
   returnMotor(xDirectVar,xDirectPin,xSteps,xDataPoints,xMotor);
